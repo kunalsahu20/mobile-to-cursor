@@ -1,0 +1,44 @@
+# ══════════════════════════════════════════════════
+# Mobile to Cursor — .gitignore
+# ══════════════════════════════════════════════════
+
+# ── Android ────────────────────────────────────────
+android/.gradle/
+android/.idea/
+android/.kotlin/
+android/build/
+android/app/build/
+android/local.properties
+android/captures/
+android/.externalNativeBuild/
+android/.cxx/
+
+# Heap dumps (can be 700MB+)
+*.hprof
+
+# Signed APK/AAB
+*.apk
+*.aab
+
+# Keystore files (NEVER upload these)
+*.jks
+*.keystore
+
+# ── Desktop (Python) ──────────────────────────────
+desktop/__pycache__/
+desktop/*.pyc
+desktop/*.pyo
+desktop/.env
+desktop/venv/
+desktop/.venv/
+
+# ── IDE ────────────────────────────────────────────
+.idea/
+.vscode/
+*.iml
+*.swp
+
+# ── OS ─────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
