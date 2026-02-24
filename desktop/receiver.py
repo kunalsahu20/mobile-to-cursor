@@ -35,6 +35,10 @@ logger = logging.getLogger(__name__)
 # Random 6-digit PIN generated at startup. Changes every restart.
 AUTH_PIN = f"{secrets.randbelow(1_000_000):06d}"
 
+# ── Connection limit ───────────────────────────
+# Only 1 device at a time. Lock is held while a phone is connected.
+_connection_lock = asyncio.Lock()
+
 
 def get_local_ips() -> list[str]:
     """Return all local IPv4 addresses (useful for showing the user what to connect to)."""
@@ -57,75 +61,88 @@ async def handle_client(
     peer = writer.get_extra_info("peername")
     logger.info("📱 Phone connected: %s", peer)
 
-    authenticated = False
-
-    try:
-        # ── Step 1: Authenticate ──────────────────
-        # First message MUST be AUTH with correct PIN.
-        # Wait up to 10 seconds for the auth message.
-        try:
-            data = await asyncio.wait_for(reader.readline(), timeout=10.0)
-        except asyncio.TimeoutError:
-            logger.warning("⛔ Auth timeout from %s — disconnecting", peer)
-            writer.write(b'{"status":"AUTH_FAIL","reason":"timeout"}\n')
-            await writer.drain()
-            return
-
-        if not data:
-            return
-
-        line = data.decode("utf-8", errors="replace")
-        event = parse_event(line)
-
-        if event is None or event.get("type") != "AUTH":
-            logger.warning("⛔ First message was not AUTH from %s — disconnecting", peer)
-            writer.write(b'{"status":"AUTH_FAIL","reason":"expected_auth"}\n')
-            await writer.drain()
-            return
-
-        if event.get("pin") != AUTH_PIN:
-            logger.warning("⛔ Wrong PIN from %s — disconnecting", peer)
-            writer.write(b'{"status":"AUTH_FAIL","reason":"wrong_pin"}\n')
-            await writer.drain()
-            return
-
-        # Auth passed!
-        authenticated = True
-        writer.write(b'{"status":"AUTH_OK"}\n')
+    # ── Reject if another device is already connected ──
+    if _connection_lock.locked():
+        logger.warning("⛔ Rejected %s — another device is already connected", peer)
+        writer.write(b'{"status":"AUTH_FAIL","reason":"busy"}\n')
         await writer.drain()
-        logger.info("✅ Phone authenticated: %s", peer)
-
-        # ── Step 2: Normal event loop ─────────────
-        while True:
-            data = await reader.readline()
-            if not data:
-                break
-
-            line = data.decode("utf-8", errors="replace")
-            event = parse_event(line)
-            if event is None:
-                continue
-
-            # Skip stray AUTH messages after initial auth
-            if event.get("type") == "AUTH":
-                continue
-
-            dispatch(event)
-
-    except asyncio.CancelledError:
-        logger.info("Client handler cancelled")
-    except ConnectionResetError:
-        logger.warning("Phone disconnected abruptly")
-    except Exception:
-        logger.exception("Unexpected error in client handler")
-    finally:
         writer.close()
         try:
             await writer.wait_closed()
         except Exception:
             pass
-        status = "authenticated" if authenticated else "unauthenticated"
-        logger.info("📱 Phone disconnected (%s): %s", status, peer)
+        return
+
+    async with _connection_lock:
+        authenticated = False
+
+        try:
+            # -- Step 1: Authenticate --
+            # First message MUST be AUTH with correct PIN.
+            # Wait up to 10 seconds for the auth message.
+            try:
+                data = await asyncio.wait_for(reader.readline(), timeout=10.0)
+            except asyncio.TimeoutError:
+                logger.warning("⛔ Auth timeout from %s — disconnecting", peer)
+                writer.write(b'{"status":"AUTH_FAIL","reason":"timeout"}\n')
+                await writer.drain()
+                return
+
+            if not data:
+                return
+
+            line = data.decode("utf-8", errors="replace")
+            event = parse_event(line)
+
+            if event is None or event.get("type") != "AUTH":
+                logger.warning("⛔ First message was not AUTH from %s — disconnecting", peer)
+                writer.write(b'{"status":"AUTH_FAIL","reason":"expected_auth"}\n')
+                await writer.drain()
+                return
+
+            if event.get("pin") != AUTH_PIN:
+                logger.warning("⛔ Wrong PIN from %s — disconnecting", peer)
+                writer.write(b'{"status":"AUTH_FAIL","reason":"wrong_pin"}\n')
+                await writer.drain()
+                return
+
+            # Auth passed!
+            authenticated = True
+            writer.write(b'{"status":"AUTH_OK"}\n')
+            await writer.drain()
+            logger.info("✅ Phone authenticated: %s", peer)
+
+            # -- Step 2: Normal event loop --
+            while True:
+                data = await reader.readline()
+                if not data:
+                    break
+
+                line = data.decode("utf-8", errors="replace")
+                event = parse_event(line)
+                if event is None:
+                    continue
+
+                # Skip stray AUTH messages after initial auth
+                if event.get("type") == "AUTH":
+                    continue
+
+                dispatch(event)
+
+        except asyncio.CancelledError:
+            logger.info("Client handler cancelled")
+        except ConnectionResetError:
+            logger.warning("Phone disconnected abruptly")
+        except Exception:
+            logger.exception("Unexpected error in client handler")
+        finally:
+            writer.close()
+            try:
+                await writer.wait_closed()
+            except Exception:
+                pass
+            status = "authenticated" if authenticated else "unauthenticated"
+            logger.info("📱 Phone disconnected (%s): %s", status, peer)
 
 
 async def run_server() -> None:
