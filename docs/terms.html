@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Terms of Service — Vexra</title>
+    <meta name="description" content="Vexra Terms of Service. Open source, MIT licensed, provided as-is." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet" />
+    <style>
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #000;
+            --fg: #fff;
+            --muted: #888;
+            --border: rgba(255, 255, 255, 0.12);
+            --accent: rgba(120, 80, 255, 0.9);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--fg);
+            line-height: 1.7;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            opacity: 0.03;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            pointer-events: none;
+        }
+
+        .glow-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .glow-orb--top-right {
+            width: 700px;
+            height: 700px;
+            top: -250px;
+            right: -250px;
+            background: radial-gradient(circle, rgba(120, 80, 255, 0.12) 0%, rgba(60, 120, 255, 0.05) 40%, transparent 70%);
+            animation: pulse 8s ease-in-out infinite alternate;
+        }
+
+        .glow-orb--bottom-left {
+            width: 600px;
+            height: 600px;
+            bottom: -200px;
+            left: -200px;
+            background: radial-gradient(circle, rgba(80, 140, 255, 0.1) 0%, rgba(140, 80, 255, 0.04) 40%, transparent 70%);
+            animation: pulse 10s ease-in-out 2s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 0.6;
+                transform: scale(1);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1.15);
+            }
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 28px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 10%;
+            width: 80%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(120, 80, 255, 0.3), rgba(80, 140, 255, 0.3), transparent);
+        }
+
+        .nav__brand {
+            font-size: 1.4rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            text-decoration: none;
+            color: var(--fg);
+        }
+
+        .nav__links {
+            display: flex;
+            gap: 24px;
+            list-style: none;
+        }
+
+        .nav__links a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav__links a:hover {
+            color: var(--fg);
+        }
+
+        .legal {
+            padding: 80px 0 60px;
+        }
+
+        .legal__badge {
+            display: inline-block;
+            padding: 5px 14px;
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--muted);
+            margin-bottom: 24px;
+            letter-spacing: 0.5px;
+        }
+
+        .legal__title {
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 800;
+            letter-spacing: -1.5px;
+            margin-bottom: 8px;
+        }
+
+        .legal__updated {
+            color: var(--muted);
+            font-size: 0.85rem;
+            margin-bottom: 48px;
+        }
+
+        .legal__section {
+            margin-bottom: 40px;
+        }
+
+        .legal__section h2 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .legal__section p,
+        .legal__section li {
+            color: #ccc;
+            font-size: 0.95rem;
+            line-height: 1.8;
+        }
+
+        .legal__section ul {
+            padding-left: 20px;
+            margin-top: 8px;
+        }
+
+        .legal__section li {
+            margin-bottom: 6px;
+        }
+
+        .legal__highlight {
+            background: rgba(120, 80, 255, 0.08);
+            border: 1px solid rgba(120, 80, 255, 0.2);
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin: 16px 0;
+        }
+
+        .legal__highlight p {
+            color: var(--fg);
+            font-weight: 500;
+        }
+
+        code {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .footer {
+            padding: 40px 0;
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .footer__text {
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+
+        .footer__text a {
+            color: var(--fg);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .footer__links {
+            display: flex;
+            gap: 24px;
+        }
+
+        .footer__links a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color 0.2s;
+        }
+
+        .footer__links a:hover {
+            color: var(--fg);
+        }
+
+        @media (max-width: 768px) {
+            .nav__links {
+                display: none;
+            }
+
+            .footer {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="glow-orb glow-orb--top-right"></div>
+    <div class="glow-orb glow-orb--bottom-left"></div>
+
+    <header class="container" style="position:relative;">
+        <nav class="nav">
+            <a href="index.html" class="nav__brand">Vexra</a>
+            <ul class="nav__links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="documentation.html">Docs</a></li>
+                <li><a href="terms.html" style="color:var(--fg);">Terms</a></li>
+                <li><a href="privacy.html">Privacy</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container legal">
+        <span class="legal__badge">Legal</span>
+        <h1 class="legal__title">Terms of Service</h1>
+        <p class="legal__updated">Last updated: March 5, 2026</p>
+
+        <div class="legal__highlight">
+            <p>📋 Vexra is open-source software released under the MIT License. By using Vexra, you agree to the
+                following terms.</p>
+        </div>
+
+        <section class="legal__section">
+            <h2>1. Acceptance of Terms</h2>
+            <p>By downloading, installing, or using the Vexra mobile application ("App") or the Vexra desktop receiver
+                ("Software"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these
+                Terms, do not use the Software.</p>
+        </section>
+
+        <section class="legal__section">
+            <h2>2. License</h2>
+            <p>Vexra is licensed under the <strong>MIT License</strong>. You are granted a free, non-exclusive,
+                worldwide license to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+                the Software, subject to the following conditions:</p>
+            <ul>
+                <li>The above copyright notice and the MIT License permission notice shall be included in all copies or
+                    substantial portions of the Software.</li>
+                <li>The Software is provided "as is", without warranty of any kind.</li>
+            </ul>
+            <p>Full license text is available at <a
+                    href="https://github.com/kunalsahu20/mobile-to-cursor/blob/main/LICENSE" target="_blank"
+                    style="color:var(--accent);">LICENSE</a>.</p>
+        </section>
+
+        <section class="legal__section">
+            <h2>3. Description of Service</h2>
+            <p>Vexra allows users to use their Android smartphone as a wireless trackpad, keyboard, and input device for
+                their desktop computer over a local Wi-Fi network. The Software consists of:</p>
+            <ul>
+                <li><strong>Vexra Mobile App</strong> — Android application that captures touch input and sends it over
+                    TCP.</li>
+                <li><strong>Vexra Desktop Receiver</strong> — Python application that receives input commands and
+                    simulates mouse/keyboard actions on the host computer.</li>
+            </ul>
+        </section>
+
+        <section class="legal__section">
+            <h2>4. User Responsibilities</h2>
+            <p>By using Vexra, you agree to:</p>
+            <ul>
+                <li>Use the Software only on devices and networks you own or have authorization to use.</li>
+                <li>Not use the Software for unauthorized access to computer systems.</li>
+                <li>Not use the Software for any illegal, harmful, or malicious purposes.</li>
+                <li>Not reverse-engineer the Software to create malicious tools (e.g., keyloggers, remote access
+                    trojans).</li>
+                <li>Ensure both your mobile device and desktop computer are on a trusted, secure local network.</li>
+            </ul>
+        </section>
+
+        <section class="legal__section">
+            <h2>5. Security</h2>
+            <p>Vexra provides optional PIN-based authentication to restrict unauthorized connections. However:</p>
+            <ul>
+                <li>Communication between the App and the Receiver is <strong>not encrypted</strong> by default. Input
+                    data (cursor positions, keystrokes) is transmitted in plaintext over your local network.</li>
+                <li>Users are responsible for ensuring their local network is secure (use WPA2/WPA3-protected Wi-Fi).
+                </li>
+                <li>Do not use Vexra on public or untrusted networks.</li>
+            </ul>
+        </section>
+
+        <section class="legal__section">
+            <h2>6. Disclaimer of Warranties</h2>
+            <p>THE SOFTWARE IS PROVIDED <strong>"AS IS"</strong>, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+                INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND
+                NONINFRINGEMENT.</p>
+            <p>In no event shall the authors or copyright holders be liable for any claim, damages, or other liability,
+                whether in an action of contract, tort, or otherwise, arising from, out of, or in connection with the
+                Software or the use or other dealings in the Software.</p>
+        </section>
+
+        <section class="legal__section">
+            <h2>7. Limitation of Liability</h2>
+            <p>To the maximum extent permitted by applicable law, the developers of Vexra shall not be liable for:</p>
+            <ul>
+                <li>Any indirect, incidental, special, consequential, or punitive damages.</li>
+                <li>Any loss of profits, data, use, goodwill, or other intangible losses.</li>
+                <li>Any damage to your computer system or mobile device resulting from use of the Software.</li>
+                <li>Any unauthorized access to your local network or computer while using the Software.</li>
+            </ul>
+        </section>
+
+        <section class="legal__section">
+            <h2>8. Antivirus Notices</h2>
+            <p>The Vexra desktop receiver (<code>Vexra.exe</code>) may be flagged by some antivirus software as a
+                potential threat. This is a <strong>false positive</strong> caused by:</p>
+            <ul>
+                <li>The use of <code>pynput</code>, a legitimate Python library for keyboard/mouse control.</li>
+                <li>The PyInstaller packaging method used to create the standalone executable.</li>
+            </ul>
+            <p>Vexra is fully open source — you can inspect the code and build the executable yourself to verify its
+                safety.</p>
+        </section>
+
+        <section class="legal__section">
+            <h2>9. Updates</h2>
+            <p>Vexra may check for updates via the GitHub API. This is entirely optional and sends no personal data.
+                Update checks may be disabled in the app settings.</p>
+        </section>
+
+        <section class="legal__section">
+            <h2>10. Modifications to Terms</h2>
+            <p>We reserve the right to modify these Terms at any time. Changes will be posted on this page with an
+                updated date. Continued use of the Software after modifications constitutes acceptance of the revised
+                Terms.</p>
+        </section>
+
+        <section class="legal__section">
+            <h2>11. Governing Law</h2>
+            <p>These Terms shall be governed by and construed in accordance with the laws of India, without regard to
+                its conflict of law provisions.</p>
+        </section>
+
+        <section class="legal__section">
+            <h2>12. Contact</h2>
+            <p>For questions about these Terms, please open an issue on our <a
+                    href="https://github.com/kunalsahu20/mobile-to-cursor/issues" target="_blank"
+                    style="color:var(--accent);">GitHub repository</a>.</p>
+        </section>
+    </main>
+
+    <footer class="container">
+        <div class="footer">
+            <p class="footer__text">Made by <a href="https://github.com/kunalsahu20" target="_blank">Kunal Sahu</a></p>
+            <div class="footer__links">
+                <a href="index.html">Home</a>
+                <a href="documentation.html">Docs</a>
+                <a href="terms.html">Terms</a>
+                <a href="privacy.html">Privacy</a>
+                <a href="https://github.com/kunalsahu20/mobile-to-cursor" target="_blank">GitHub</a>
+            </div>
+        </div>
+    </footer>
+</body>
+
+</html>

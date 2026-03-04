@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Documentation — Vexra</title>
+    <meta name="description"
+        content="Vexra setup guide. Learn how to install and use Vexra to turn your phone into a wireless trackpad and keyboard." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet" />
+    <style>
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #000;
+            --fg: #fff;
+            --muted: #888;
+            --border: rgba(255, 255, 255, 0.12);
+            --accent: rgba(120, 80, 255, 0.9);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--fg);
+            line-height: 1.7;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            opacity: 0.03;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            pointer-events: none;
+        }
+
+        .glow-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .glow-orb--top-right {
+            width: 700px;
+            height: 700px;
+            top: -250px;
+            right: -250px;
+            background: radial-gradient(circle, rgba(120, 80, 255, 0.12) 0%, rgba(60, 120, 255, 0.05) 40%, transparent 70%);
+            animation: pulse 8s ease-in-out infinite alternate;
+        }
+
+        .glow-orb--bottom-left {
+            width: 600px;
+            height: 600px;
+            bottom: -200px;
+            left: -200px;
+            background: radial-gradient(circle, rgba(80, 140, 255, 0.1) 0%, rgba(140, 80, 255, 0.04) 40%, transparent 70%);
+            animation: pulse 10s ease-in-out 2s infinite alternate;
+        }
+
+        .glow-orb--center {
+            width: 800px;
+            height: 800px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.03) 0%, transparent 60%);
+            animation: float 12s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 0.6;
+                transform: scale(1);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1.15);
+            }
+        }
+
+        @keyframes float {
+            0% {
+                opacity: 0.4;
+                transform: translate(-50%, -50%) scale(1);
+            }
+
+            100% {
+                opacity: 0.7;
+                transform: translate(-48%, -52%) scale(1.1);
+            }
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 28px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 10%;
+            width: 80%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(120, 80, 255, 0.3), rgba(80, 140, 255, 0.3), transparent);
+        }
+
+        .nav__brand {
+            font-size: 1.4rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            text-decoration: none;
+            color: var(--fg);
+        }
+
+        .nav__links {
+            display: flex;
+            gap: 24px;
+            list-style: none;
+        }
+
+        .nav__links a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav__links a:hover {
+            color: var(--fg);
+        }
+
+        .docs {
+            padding: 80px 0 60px;
+        }
+
+        .docs__badge {
+            display: inline-block;
+            padding: 5px 14px;
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--muted);
+            margin-bottom: 24px;
+            letter-spacing: 0.5px;
+        }
+
+        .docs__title {
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 800;
+            letter-spacing: -1.5px;
+            margin-bottom: 8px;
+        }
+
+        .docs__subtitle {
+            color: var(--muted);
+            font-size: 0.95rem;
+            margin-bottom: 48px;
+        }
+
+        .docs__section {
+            margin-bottom: 48px;
+        }
+
+        .docs__section h2 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .docs__section h3 {
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin: 20px 0 10px;
+            color: var(--fg);
+        }
+
+        .docs__section p,
+        .docs__section li {
+            color: #ccc;
+            font-size: 0.95rem;
+            line-height: 1.8;
+        }
+
+        .docs__section ul,
+        .docs__section ol {
+            padding-left: 20px;
+            margin-top: 8px;
+        }
+
+        .docs__section li {
+            margin-bottom: 8px;
+        }
+
+        code {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-family: 'Courier New', monospace;
+        }
+
+        .code-block {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin: 12px 0 20px;
+            overflow-x: auto;
+        }
+
+        .code-block code {
+            background: none;
+            padding: 0;
+            display: block;
+            white-space: pre;
+            line-height: 1.6;
+            color: #e0e0e0;
+        }
+
+        .step-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px 24px;
+            margin-bottom: 16px;
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+            transition: border-color 0.3s, transform 0.3s;
+        }
+
+        .step-card:hover {
+            border-color: rgba(120, 80, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .step-num {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: var(--accent);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .step-content h4 {
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .step-content p {
+            color: #ccc;
+            font-size: 0.9rem;
+        }
+
+        .highlight {
+            background: rgba(120, 80, 255, 0.08);
+            border: 1px solid rgba(120, 80, 255, 0.2);
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin: 16px 0;
+        }
+
+        .highlight p {
+            color: var(--fg);
+            font-weight: 500;
+        }
+
+        .gesture-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+        }
+
+        .gesture-table th,
+        .gesture-table td {
+            text-align: left;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+        }
+
+        .gesture-table th {
+            color: var(--muted);
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .gesture-table td {
+            color: #ccc;
+        }
+
+        .gesture-table tr:hover td {
+            color: var(--fg);
+        }
+
+        .req-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 16px 0;
+        }
+
+        .req-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .req-card h4 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .req-card ul {
+            padding-left: 16px;
+        }
+
+        .req-card li {
+            color: #ccc;
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+        }
+
+        .footer {
+            padding: 40px 0;
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .footer__text {
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+
+        .footer__text a {
+            color: var(--fg);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .footer__links {
+            display: flex;
+            gap: 24px;
+        }
+
+        .footer__links a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color 0.2s;
+        }
+
+        .footer__links a:hover {
+            color: var(--fg);
+        }
+
+        @media (max-width: 768px) {
+            .nav__links {
+                display: none;
+            }
+
+            .footer {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .req-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .step-card {
+                flex-direction: column;
+                gap: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="glow-orb glow-orb--top-right"></div>
+    <div class="glow-orb glow-orb--bottom-left"></div>
+    <div class="glow-orb glow-orb--center"></div>
+
+    <header class="container" style="position:relative;">
+        <nav class="nav">
+            <a href="index.html" class="nav__brand">Vexra</a>
+            <ul class="nav__links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="documentation.html" style="color:var(--fg);">Docs</a></li>
+                <li><a href="terms.html">Terms</a></li>
+                <li><a href="privacy.html">Privacy</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container docs">
+        <span class="docs__badge">Documentation</span>
+        <h1 class="docs__title">Getting Started</h1>
+        <p class="docs__subtitle">Everything you need to set up Vexra and start using your phone as a wireless trackpad.
+        </p>
+
+        <!-- Requirements -->
+        <section class="docs__section">
+            <h2>Requirements</h2>
+            <div class="req-grid">
+                <div class="req-card">
+                    <h4>📱 Mobile</h4>
+                    <ul>
+                        <li>Android 8.0 (Oreo) or higher</li>
+                        <li>Wi-Fi connection</li>
+                    </ul>
+                </div>
+                <div class="req-card">
+                    <h4>💻 Desktop</h4>
+                    <ul>
+                        <li>Windows 10/11</li>
+                        <li>Same Wi-Fi network as phone</li>
+                        <li>Python 3.8+ (for .zip version)</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quick Start -->
+        <section class="docs__section">
+            <h2>Quick Start</h2>
+
+            <div class="step-card">
+                <div class="step-num">1</div>
+                <div class="step-content">
+                    <h4>Download & Install</h4>
+                    <p>Download <strong>Vexra.apk</strong> on your phone and <strong>Vexra.exe</strong> (or
+                        <strong>Vexra-Desktop.zip</strong>) on your desktop from the <a href="index.html#download"
+                            style="color:var(--accent);">download page</a>.</p>
+                </div>
+            </div>
+
+            <div class="step-card">
+                <div class="step-num">2</div>
+                <div class="step-content">
+                    <h4>Run the Desktop Receiver</h4>
+                    <p>Launch <code>Vexra.exe</code> on your desktop. It will display your PC's IP address, port number,
+                        and optional PIN. Keep this window open.</p>
+                </div>
+            </div>
+
+            <div class="step-card">
+                <div class="step-num">3</div>
+                <div class="step-content">
+                    <h4>Connect from Your Phone</h4>
+                    <p>Open the Vexra app on your phone. Enter the <strong>IP address</strong>, <strong>port</strong>,
+                        and <strong>PIN</strong> shown on your desktop receiver. Tap <strong>Connect</strong>.</p>
+                </div>
+            </div>
+
+            <div class="step-card">
+                <div class="step-num">4</div>
+                <div class="step-content">
+                    <h4>Start Using!</h4>
+                    <p>Switch between <strong>Trackpad</strong> and <strong>Keyboard</strong> modes using the bottom
+                        tabs. Your phone is now your wireless input device.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ZIP Version -->
+        <section class="docs__section">
+            <h2>Using the ZIP Version</h2>
+            <p>If antivirus blocks the <code>.exe</code>, use the <code>.zip</code> version instead. It requires Python
+                installed on your PC.</p>
+            <div class="code-block">
+                <code>1. Download and extract Vexra-Desktop.zip
+2. Double-click "Start Vexra.bat"
+3. The script auto-installs dependencies and runs the receiver</code>
+            </div>
+            <p>If Python is not installed, the script will open python.org for you. Make sure to check <strong>"Add
+                    Python to PATH"</strong> during installation.</p>
+        </section>
+
+        <!-- Gestures -->
+        <section class="docs__section">
+            <h2>Trackpad Gestures</h2>
+            <table class="gesture-table">
+                <thead>
+                    <tr>
+                        <th>Gesture</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1-finger drag</td>
+                        <td>Move cursor</td>
+                    </tr>
+                    <tr>
+                        <td>1-finger tap</td>
+                        <td>Left click</td>
+                    </tr>
+                    <tr>
+                        <td>1-finger long press</td>
+                        <td>Click & drag</td>
+                    </tr>
+                    <tr>
+                        <td>2-finger tap</td>
+                        <td>Right click</td>
+                    </tr>
+                    <tr>
+                        <td>2-finger scroll</td>
+                        <td>Scroll up/down</td>
+                    </tr>
+                    <tr>
+                        <td>3-finger swipe up</td>
+                        <td>Task View (Windows)</td>
+                    </tr>
+                    <tr>
+                        <td>3-finger swipe down</td>
+                        <td>Show Desktop</td>
+                    </tr>
+                    <tr>
+                        <td>3-finger swipe left/right</td>
+                        <td>Switch applications</td>
+                    </tr>
+                    <tr>
+                        <td>4-finger swipe up/down</td>
+                        <td>Volume control</td>
+                    </tr>
+                    <tr>
+                        <td>4-finger swipe left/right</td>
+                        <td>Virtual desktops</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Configuration -->
+        <section class="docs__section">
+            <h2>Configuration</h2>
+            <h3>Desktop Receiver (config.py)</h3>
+            <table class="gesture-table">
+                <thead>
+                    <tr>
+                        <th>Setting</th>
+                        <th>Default</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>HOST</code></td>
+                        <td><code>0.0.0.0</code></td>
+                        <td>Listen on all network interfaces</td>
+                    </tr>
+                    <tr>
+                        <td><code>PORT</code></td>
+                        <td><code>5005</code></td>
+                        <td>TCP port for communication</td>
+                    </tr>
+                    <tr>
+                        <td><code>PIN</code></td>
+                        <td><code>""</code></td>
+                        <td>6-digit PIN for authentication (empty = no PIN)</td>
+                    </tr>
+                    <tr>
+                        <td><code>MOUSE_SENSITIVITY</code></td>
+                        <td><code>1.8</code></td>
+                        <td>Cursor speed multiplier</td>
+                    </tr>
+                    <tr>
+                        <td><code>SCROLL_SENSITIVITY</code></td>
+                        <td><code>1.0</code></td>
+                        <td>Scroll speed multiplier</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Mobile App Settings</h3>
+            <p>Access settings via the <strong>gear icon</strong> in the top-right corner of the app. Available options:
+            </p>
+            <ul>
+                <li><strong>Mouse Sensitivity</strong> — Adjust cursor speed (0.5x to 3.0x)</li>
+                <li><strong>Scroll Sensitivity</strong> — Adjust scroll speed</li>
+                <li><strong>Haptic Feedback</strong> — Enable/disable vibration on tap</li>
+                <li><strong>Theme</strong> — Dark mode (default) or light mode</li>
+            </ul>
+        </section>
+
+        <!-- Security -->
+        <section class="docs__section">
+            <h2>Security</h2>
+            <div class="highlight">
+                <p>🔒 Vexra uses local network communication only. No data ever leaves your Wi-Fi network.</p>
+            </div>
+            <ul>
+                <li><strong>PIN Authentication:</strong> Set a 6-digit PIN on the desktop receiver to prevent
+                    unauthorized connections.</li>
+                <li><strong>Single Device:</strong> Only one phone can connect to the receiver at a time.</li>
+                <li><strong>No Cloud:</strong> Zero external servers, zero internet dependency.</li>
+                <li><strong>Open Source:</strong> Full source code available for audit on <a
+                        href="https://github.com/kunalsahu20/mobile-to-cursor" target="_blank"
+                        style="color:var(--accent);">GitHub</a>.</li>
+            </ul>
+        </section>
+
+        <!-- Troubleshooting -->
+        <section class="docs__section">
+            <h2>Troubleshooting</h2>
+
+            <h3>❌ Can't Connect</h3>
+            <ul>
+                <li>Ensure both devices are on the <strong>same Wi-Fi network</strong>.</li>
+                <li>Check that the desktop receiver is running and showing "Waiting for connection".</li>
+                <li>Verify the IP address, port, and PIN are entered correctly.</li>
+                <li>Disable Windows Firewall temporarily to test, then add an exception for Vexra.</li>
+            </ul>
+
+            <h3>❌ Antivirus Blocking the .exe</h3>
+            <ul>
+                <li>Use the <strong>.zip version</strong> instead — it runs as a Python script and bypasses AV.</li>
+                <li>Add <code>Vexra.exe</code> to your antivirus whitelist/exclusions.</li>
+                <li>The source code is <a href="https://github.com/kunalsahu20/mobile-to-cursor" target="_blank"
+                        style="color:var(--accent);">fully open</a> — build it yourself to verify safety.</li>
+            </ul>
+
+            <h3>❌ High Latency / Lag</h3>
+            <ul>
+                <li>Connect both devices to a <strong>5 GHz Wi-Fi network</strong> for lower latency.</li>
+                <li>Reduce the distance between your phone and the Wi-Fi router.</li>
+                <li>Close bandwidth-heavy apps on both devices.</li>
+            </ul>
+
+            <h3>❌ App Not Found in Phone Search</h3>
+            <ul>
+                <li><strong>Restart your phone</strong> to force the app launcher index to rebuild.</li>
+                <li>If you updated from an older version, uninstall and reinstall the app.</li>
+            </ul>
+        </section>
+
+        <!-- Building From Source -->
+        <section class="docs__section">
+            <h2>Building From Source</h2>
+
+            <h3>Desktop Receiver</h3>
+            <div class="code-block">
+                <code>git clone https://github.com/kunalsahu20/mobile-to-cursor.git
+cd mobile-to-cursor/desktop
+pip install -r requirements.txt
+python receiver.py</code>
+            </div>
+
+            <h3>Android App</h3>
+            <div class="code-block">
+                <code>cd mobile-to-cursor/android
+./gradlew assembleDebug</code>
+            </div>
+            <p>The built APK will be at <code>app/build/outputs/apk/debug/app-debug.apk</code>.</p>
+        </section>
+    </main>
+
+    <footer class="container">
+        <div class="footer">
+            <p class="footer__text">Made by <a href="https://github.com/kunalsahu20" target="_blank">Kunal Sahu</a></p>
+            <div class="footer__links">
+                <a href="index.html">Home</a>
+                <a href="documentation.html">Docs</a>
+                <a href="terms.html">Terms</a>
+                <a href="privacy.html">Privacy</a>
+                <a href="https://github.com/kunalsahu20/mobile-to-cursor" target="_blank">GitHub</a>
+            </div>
+        </div>
+    </footer>
+</body>
+
+</html>
