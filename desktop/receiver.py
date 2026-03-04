@@ -178,7 +178,7 @@ GREEN = "#34d399"
 YELLOW = "#fbbf24"
 RED = "#f87171"
 
-W, H = 460, 580
+W, H = 460, 640
 
 
 class VexraApp:
@@ -290,8 +290,7 @@ class VexraApp:
         # ═══ Activity log card ═══
         log_card = tk.Frame(r, bg=CARD_BG, highlightbackground=CARD_BORDER,
                             highlightthickness=1)
-        log_card.pack(padx=32, pady=(12, 0),
-                      expand=True, fill="both")
+        log_card.pack(padx=32, pady=(12, 0), fill="x")
 
         # Log header
         log_hdr = tk.Frame(log_card, bg=CARD_BG, padx=16, pady=8)
@@ -313,7 +312,8 @@ class VexraApp:
             insertbackground=TEXT_GRAY, selectbackground=ACCENT,
             highlightthickness=0,
         )
-        self._log.pack(fill="both", expand=True)
+        self._log.pack(fill="x")
+        self._log.configure(height=8)
         self._log.tag_configure("ok", foreground=GREEN)
         self._log.tag_configure("warn", foreground=YELLOW)
         self._log.tag_configure("err", foreground=RED)
