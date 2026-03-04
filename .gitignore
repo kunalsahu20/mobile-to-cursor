@@ -1,5 +1,5 @@
 # ══════════════════════════════════════════════════
-# Mobile to Cursor — .gitignore
+# Vexra — .gitignore
 # ══════════════════════════════════════════════════
 
 # ── Android ────────────────────────────────────────
@@ -31,6 +31,10 @@ desktop/*.pyo
 desktop/.env
 desktop/venv/
 desktop/.venv/
+desktop/dist/
+desktop/build/
+desktop/*.spec
+desktop/*.ico
 
 # ── IDE ────────────────────────────────────────────
 .idea/
