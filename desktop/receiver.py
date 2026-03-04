@@ -1,14 +1,13 @@
 """
 Vexra — Desktop Receiver (GUI)
 
-Premium windowed TCP server with animated glow orb effects.
-Consistent dark aesthetic matching the Vexra landing page.
-Runs asyncio in a background thread, updates tkinter via queue.
+Ultra-minimalist pairing screen designed via Stitch.
+Pure black, PIN-as-hero, typography-only — no borders, no cards, no effects.
+Runs asyncio server in background thread, updates tkinter via queue.
 """
 
 import asyncio
 import logging
-import math
 import os
 import queue
 import secrets
@@ -24,7 +23,6 @@ from injector import dispatch
 
 
 def resource_path(relative_path: str) -> str:
-    """Resolve path for PyInstaller --onefile bundles."""
     if hasattr(sys, "_MEIPASS"):
         return os.path.join(sys._MEIPASS, relative_path)
     return os.path.join(os.path.abspath(os.path.dirname(__file__)), relative_path)
@@ -67,16 +65,16 @@ def get_local_ips() -> list[str]:
 
 
 # ═══════════════════════════════════════════════
-#  TCP Server (background thread)
+#  TCP Server
 # ═══════════════════════════════════════════════
 
 async def handle_client(reader, writer) -> None:
     peer = writer.get_extra_info("peername")
-    logger.info("📱  Phone connected: %s", peer)
+    logger.info("Phone connected: %s", peer)
     _log_queue.put(("status", "connecting"))
 
     if _connection_lock.locked():
-        logger.warning("⛔  Rejected %s — busy", peer)
+        logger.warning("Rejected %s — busy", peer)
         writer.write(b'{"status":"AUTH_FAIL","reason":"busy"}\n')
         await writer.drain()
         writer.close()
@@ -92,7 +90,7 @@ async def handle_client(reader, writer) -> None:
             try:
                 data = await asyncio.wait_for(reader.readline(), timeout=10.0)
             except asyncio.TimeoutError:
-                logger.warning("⛔  Auth timeout from %s", peer)
+                logger.warning("Auth timeout from %s", peer)
                 writer.write(b'{"status":"AUTH_FAIL","reason":"timeout"}\n')
                 await writer.drain()
                 return
@@ -101,12 +99,11 @@ async def handle_client(reader, writer) -> None:
             line = data.decode("utf-8", errors="replace")
             event = parse_event(line)
             if event is None or event.get("type") != "AUTH":
-                logger.warning("⛔  Expected AUTH from %s", peer)
                 writer.write(b'{"status":"AUTH_FAIL","reason":"expected_auth"}\n')
                 await writer.drain()
                 return
             if event.get("pin") != AUTH_PIN:
-                logger.warning("⛔  Wrong PIN from %s", peer)
+                logger.warning("Wrong PIN from %s", peer)
                 writer.write(b'{"status":"AUTH_FAIL","reason":"wrong_pin"}\n')
                 await writer.drain()
                 return
@@ -114,7 +111,7 @@ async def handle_client(reader, writer) -> None:
             authenticated = True
             writer.write(b'{"status":"AUTH_OK"}\n')
             await writer.drain()
-            logger.info("✅  Authenticated: %s", peer)
+            logger.info("Authenticated: %s", peer)
             _log_queue.put(("status", "connected"))
 
             while True:
@@ -138,8 +135,8 @@ async def handle_client(reader, writer) -> None:
                 await writer.wait_closed()
             except Exception:
                 pass
-            tag = "authenticated" if authenticated else "unauthenticated"
-            logger.info("📱  Disconnected (%s)", tag)
+            logger.info("Disconnected (%s)",
+                        "authenticated" if authenticated else "unauthenticated")
             _log_queue.put(("status", "waiting"))
 
 
@@ -167,47 +164,24 @@ def _server_thread() -> None:
 
 
 # ═══════════════════════════════════════════════
-#  Design tokens
+#  Colors — only black, white, gray, purple
 # ═══════════════════════════════════════════════
 
 BG = "#000000"
-SURFACE_2 = "#111114"
-BORDER = "#1f1f24"
-TEXT = "#f5f5f7"
-TEXT_SEC = "#a1a1a8"
-TEXT_MUT = "#6b6b74"
-ACCENT = "#7b5ae7"
-ACCENT_H = "#9478f0"
-ACCENT_D = "#4a3590"
+WHITE = "#ffffff"
+GRAY = "#666666"
+DIM = "#333333"
+ACCENT = "#7c5ce7"
+ACCENT_H = "#9b7dff"
 GREEN = "#34d399"
 YELLOW = "#fbbf24"
 RED = "#f87171"
 
-W, H = 480, 660
-
-
-def _draw_glow(canvas, cx, cy, r, rgb, layers=14):
-    """Draw soft radial glow using concentric ovals."""
-    items = []
-    br, bg_c, bb = rgb
-    for i in range(layers, 0, -1):
-        frac = i / layers
-        rad = int(r * frac)
-        blend = frac ** 0.6
-        cr = min(255, int(br * blend))
-        cg = min(255, int(bg_c * blend))
-        cb = min(255, int(bb * blend))
-        color = f"#{cr:02x}{cg:02x}{cb:02x}"
-        item = canvas.create_oval(
-            cx - rad, cy - rad, cx + rad, cy + rad,
-            fill=color, outline="",
-        )
-        items.append(item)
-    return items
+W, H = 440, 600
 
 
 class VexraApp:
-    """Premium receiver with animated glow effects."""
+    """Ultra-minimalist pairing screen (Stitch design)."""
 
     def __init__(self) -> None:
         self.root = tk.Tk()
@@ -226,210 +200,127 @@ class VexraApp:
             except Exception:
                 pass
 
-        self._step = 0
-        self._orbs = []
         self._build()
         self._poll()
-        self._animate()
 
     def _build(self) -> None:
-        # ── Full-window canvas (everything drawn/placed on this) ──
-        c = tk.Canvas(self.root, width=W, height=H, bg=BG, highlightthickness=0)
-        c.pack(fill="both", expand=True)
-        self._cv = c
+        r = self.root
 
-        # ── Glow orbs (drawn first, behind everything) ──
-        g1 = _draw_glow(c, 400, 50, 250, (100, 60, 200), 16)
-        g2 = _draw_glow(c, 60, 600, 220, (160, 40, 160), 14)
-        g3 = _draw_glow(c, 240, 330, 300, (50, 40, 120), 12)
+        # ── Breathing room at top ──
+        tk.Frame(r, bg=BG, height=60).pack()
 
-        self._orbs = [
-            (g1, 400, 50, 250, (100, 60, 200), 16),
-            (g2, 60, 600, 220, (160, 40, 160), 14),
-            (g3, 240, 330, 300, (50, 40, 120), 12),
-        ]
+        # ── Brand ──
+        tk.Label(
+            r, text="V E X R A",
+            font=("Segoe UI", 24, "bold"), fg=WHITE, bg=BG,
+        ).pack()
 
-        # ── Top accent bar ──
-        c.create_rectangle(0, 0, W, 3, fill="#0a0a14", outline="")
-        c.create_rectangle(40, 0, 440, 3, fill=ACCENT_D, outline="")
-        c.create_rectangle(120, 0, 360, 3, fill=ACCENT, outline="")
+        tk.Label(
+            r, text="Your phone. Your trackpad. No wires.",
+            font=("Segoe UI", 9), fg=GRAY, bg=BG,
+        ).pack(pady=(8, 0))
 
-        # ── Header (placed on canvas) ──
-        hdr = tk.Frame(c, bg=BG)
-        tk.Label(hdr, text="V E X R A", font=("Segoe UI", 28, "bold"),
-                 fg=TEXT, bg=BG).pack()
-        tk.Label(hdr, text="Your phone. Your trackpad. No wires.",
-                 font=("Segoe UI", 10), fg=TEXT_MUT, bg=BG).pack(pady=(6, 0))
-        c.create_window(W // 2, 72, window=hdr, anchor="n")
+        # ── Big gap ──
+        tk.Frame(r, bg=BG, height=50).pack()
 
-        # ── Status pill ──
-        pill = tk.Frame(c, bg=SURFACE_2, highlightbackground=BORDER,
-                        highlightthickness=1, padx=14, pady=5)
-        self._sdot = tk.Label(pill, text="●", font=("Segoe UI", 9),
-                              fg=YELLOW, bg=SURFACE_2)
-        self._sdot.pack(side="left")
-        self._stxt = tk.Label(pill, text="  Starting…", font=("Segoe UI", 10),
-                              fg=TEXT_SEC, bg=SURFACE_2)
-        self._stxt.pack(side="left")
-        c.create_window(W // 2, 160, window=pill, anchor="n")
+        # ── Hero: PIN ──
+        self._pin = tk.Label(
+            r, text=self._fpin(AUTH_PIN),
+            font=("Consolas", 48, "bold"), fg=ACCENT, bg=BG,
+        )
+        self._pin.pack()
 
-        # ── Connection card ──
-        card = tk.Frame(c, bg=SURFACE_2, highlightbackground=BORDER,
-                        highlightthickness=1)
+        tk.Label(
+            r, text="Enter this PIN on your phone",
+            font=("Segoe UI", 9), fg=GRAY, bg=BG,
+        ).pack(pady=(10, 0))
 
-        # Top: IP + Port
-        top = tk.Frame(card, bg=SURFACE_2, padx=20, pady=16)
-        top.pack(fill="x")
-
-        lf = tk.Frame(top, bg=SURFACE_2)
-        lf.pack(side="left", anchor="nw")
-        tk.Label(lf, text="IP ADDRESS", font=("Segoe UI", 8, "bold"),
-                 fg=TEXT_MUT, bg=SURFACE_2).pack(anchor="w")
-        ips = get_local_ips()
-        ip = ips[0] if ips else "No network"
-        tk.Label(lf, text=ip, font=("Segoe UI", 13),
-                 fg=TEXT, bg=SURFACE_2).pack(anchor="w", pady=(4, 0))
-
-        rf = tk.Frame(top, bg=SURFACE_2)
-        rf.pack(side="right", anchor="ne")
-        tk.Label(rf, text="PORT", font=("Segoe UI", 8, "bold"),
-                 fg=TEXT_MUT, bg=SURFACE_2).pack(anchor="e")
-        tk.Label(rf, text=str(PORT), font=("Segoe UI", 13),
-                 fg=TEXT, bg=SURFACE_2).pack(anchor="e", pady=(4, 0))
-
-        tk.Frame(card, bg=BORDER, height=1).pack(fill="x", padx=20)
-
-        # Bottom: PIN
-        bot = tk.Frame(card, bg=SURFACE_2, padx=20, pady=16)
-        bot.pack(fill="x")
-        tk.Label(bot, text="CONNECTION PIN", font=("Segoe UI", 8, "bold"),
-                 fg=TEXT_MUT, bg=SURFACE_2).pack(anchor="w")
-
-        pr = tk.Frame(bot, bg=SURFACE_2)
-        pr.pack(fill="x", pady=(6, 0))
-
-        self._pin = tk.Label(pr, text=self._fpin(AUTH_PIN),
-                             font=("Consolas", 26, "bold"),
-                             fg=ACCENT, bg=SURFACE_2)
-        self._pin.pack(side="left")
-
-        regen = tk.Label(pr, text="↻  Regenerate", font=("Segoe UI", 9),
-                         fg=TEXT_MUT, bg=SURFACE_2, cursor="hand2")
-        regen.pack(side="right", pady=(10, 0))
+        # Regenerate link
+        regen = tk.Label(
+            r, text="↻ New PIN",
+            font=("Segoe UI", 9), fg=DIM, bg=BG, cursor="hand2",
+        )
+        regen.pack(pady=(8, 0))
         regen.bind("<Button-1>", lambda e: self._new_pin())
         regen.bind("<Enter>", lambda e: regen.configure(fg=ACCENT_H))
-        regen.bind("<Leave>", lambda e: regen.configure(fg=TEXT_MUT))
+        regen.bind("<Leave>", lambda e: regen.configure(fg=DIM))
 
-        c.create_window(W // 2, 200, window=card, anchor="n", width=W - 56)
+        # ── Big gap ──
+        tk.Frame(r, bg=BG, height=40).pack()
 
-        # ── Activity label ──
-        act_lbl = tk.Label(c, text="ACTIVITY", font=("Segoe UI", 8, "bold"),
-                           fg=TEXT_MUT, bg=BG)
-        c.create_window(28, 405, window=act_lbl, anchor="nw")
+        # ── Info: IP & Port ──
+        ips = get_local_ips()
+        ip = ips[0] if ips else "No network"
 
-        # ── Activity log ──
-        log_frame = tk.Frame(c, bg=SURFACE_2, highlightbackground=BORDER,
-                             highlightthickness=1)
-        self._log = tk.Text(
-            log_frame, bg="#0a0a0c", fg=TEXT_MUT,
-            font=("Consolas", 9), relief="flat", bd=0,
-            padx=14, pady=12, wrap="word",
-            state="disabled", cursor="arrow",
-            insertbackground=TEXT_MUT, selectbackground=ACCENT_D,
-            highlightthickness=0,
+        tk.Label(
+            r, text=f"{ip}  ·  Port {PORT}",
+            font=("Consolas", 10), fg=DIM, bg=BG,
+        ).pack()
+
+        # ── Status ──
+        status_frame = tk.Frame(r, bg=BG)
+        status_frame.pack(pady=(16, 0))
+
+        self._sdot = tk.Label(
+            status_frame, text="●",
+            font=("Segoe UI", 9), fg=YELLOW, bg=BG,
         )
-        self._log.pack(fill="both", expand=True)
-        self._log.tag_configure("ok", foreground=GREEN)
-        self._log.tag_configure("warn", foreground=YELLOW)
-        self._log.tag_configure("err", foreground=RED)
-        self._log.tag_configure("dim", foreground=TEXT_MUT)
+        self._sdot.pack(side="left")
 
-        c.create_window(W // 2, 422, window=log_frame, anchor="n",
-                        width=W - 56, height=170)
+        self._stxt = tk.Label(
+            status_frame, text="  Waiting for phone",
+            font=("Segoe UI", 9), fg=GRAY, bg=BG,
+        )
+        self._stxt.pack(side="left")
 
-        # ── Bottom bar ──
-        foot = tk.Frame(c, bg=BG)
-        tk.Label(foot, text="v1.0.0", font=("Segoe UI", 8),
-                 fg="#2a2a30", bg=BG).pack(side="left")
-        ql = tk.Label(foot, text="✕  Quit", font=("Segoe UI", 9, "bold"),
-                      fg=TEXT_MUT, bg=BG, cursor="hand2")
+        # ── Push footer to bottom ──
+        tk.Frame(r, bg=BG).pack(fill="both", expand=True)
+
+        # ── Footer ──
+        foot = tk.Frame(r, bg=BG, padx=24, pady=16)
+        foot.pack(fill="x")
+
+        tk.Label(
+            foot, text="v1.0.0",
+            font=("Segoe UI", 8), fg="#1a1a1a", bg=BG,
+        ).pack(side="left")
+
+        ql = tk.Label(
+            foot, text="Quit",
+            font=("Segoe UI", 8), fg=DIM, bg=BG, cursor="hand2",
+        )
         ql.pack(side="right")
         ql.bind("<Button-1>", lambda e: self.root.destroy())
         ql.bind("<Enter>", lambda e: ql.configure(fg=RED))
-        ql.bind("<Leave>", lambda e: ql.configure(fg=TEXT_MUT))
-        c.create_window(W // 2, 610, window=foot, anchor="n", width=W - 56)
-
-        # ── Bottom accent bar ──
-        c.create_rectangle(0, H - 3, W, H, fill="#0a0a14", outline="")
-        c.create_rectangle(60, H - 3, 420, H, fill=ACCENT_D, outline="")
-        c.create_rectangle(160, H - 3, 320, H, fill=ACCENT, outline="")
-
-    # ── Animation ──
-
-    def _animate(self) -> None:
-        self._step += 1
-        t = self._step * 0.025
-
-        for items, cx, cy, base_r, rgb, layers in self._orbs:
-            scale = 1.0 + 0.12 * math.sin(t + cx * 0.008)
-            br, bg_c, bb = rgb
-            for i, item in enumerate(items):
-                frac = (layers - i) / layers
-                rad = int(base_r * frac * scale)
-                blend = frac ** 0.6
-                cr = min(255, int(br * blend))
-                cg = min(255, int(bg_c * blend))
-                cb = min(255, int(bb * blend))
-                self._cv.coords(item, cx - rad, cy - rad, cx + rad, cy + rad)
-                self._cv.itemconfigure(item, fill=f"#{cr:02x}{cg:02x}{cb:02x}")
-
-        self.root.after(33, self._animate)
+        ql.bind("<Leave>", lambda e: ql.configure(fg=DIM))
 
     # ── Helpers ──
 
     @staticmethod
     def _fpin(pin: str) -> str:
-        return f"{pin[:3]}   {pin[3:]}"
-
-    def _log_msg(self, msg: str) -> None:
-        self._log.configure(state="normal")
-        tag = "dim"
-        if "✅" in msg:
-            tag = "ok"
-        elif "⛔" in msg:
-            tag = "warn"
-        elif "error" in msg.lower() or "crash" in msg.lower():
-            tag = "err"
-        self._log.insert("end", msg + "\n", tag)
-        self._log.see("end")
-        self._log.configure(state="disabled")
+        return f"{pin[:3]}  {pin[3:]}"
 
     def _set_status(self, s: str) -> None:
         m = {
             "connected": (GREEN, "  Connected"),
-            "waiting": (YELLOW, "  Waiting for phone…"),
+            "waiting": (YELLOW, "  Waiting for phone"),
             "connecting": (YELLOW, "  Authenticating…"),
             "error": (RED, "  Error"),
         }
-        color, label = m.get(s, (TEXT_MUT, f"  {s}"))
+        color, label = m.get(s, (GRAY, f"  {s}"))
         self._sdot.configure(fg=color)
-        self._stxt.configure(text=label,
-                             fg=color if s == "connected" else TEXT_SEC)
+        self._stxt.configure(text=label)
 
     def _new_pin(self) -> None:
         global AUTH_PIN
         AUTH_PIN = f"{secrets.randbelow(1_000_000):06d}"
         self._pin.configure(text=self._fpin(AUTH_PIN))
-        ts = datetime.now().strftime("%H:%M:%S")
-        self._log_msg(f"{ts}  🔄  New PIN generated")
 
     def _poll(self) -> None:
         while not _log_queue.empty():
             try:
                 t, d = _log_queue.get_nowait()
-                if t == "log":
-                    self._log_msg(d)
-                elif t == "status":
+                if t == "status":
                     self._set_status(d)
             except queue.Empty:
                 break
