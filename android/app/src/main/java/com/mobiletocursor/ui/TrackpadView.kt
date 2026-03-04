@@ -2,9 +2,18 @@ package com.mobiletocursor.ui
 
 import android.view.MotionEvent
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.SwipeUp
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -16,13 +25,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.mobiletocursor.ui.theme.VexraBorder
-import com.mobiletocursor.ui.theme.VexraCard
-import com.mobiletocursor.ui.theme.VexraTextDim
 import kotlin.math.abs
 
 /**
@@ -247,19 +255,43 @@ fun TrackpadSurface(
                 }
             },
         shape = RoundedCornerShape(16.dp),
-        color = VexraCard,
-        border = BorderStroke(1.dp, VexraBorder),
+        color = Color.Black.copy(alpha = 0.40f),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.03f)),
     ) {
-        Box(contentAlignment = Alignment.Center) {
+        // Subtle inner gradient for glass depth
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color.White.copy(alpha = 0.02f),
+                            Color.Transparent,
+                        ),
+                    ),
+                ),
+        )
+
+        // Centered gesture hint (fades on touch)
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Icon(
+                Icons.Default.SwipeUp,
+                contentDescription = "Swipe",
+                tint = Color(0xFF94A3B8).copy(alpha = 0.60f),
+                modifier = Modifier.height(48.dp),
+            )
+            Spacer(Modifier.height(16.dp))
             Text(
-                text = "1 finger → cursor · tap → click · hold → drag\n" +
-                    "2 fingers → scroll · tap → right click\n" +
-                    "3 fingers → swipe gestures\n" +
-                    "4 fingers → volume · desktop switch",
-                color = VexraTextDim,
-                fontSize = 12.sp,
+                text = "Swipe to move\nTwo-finger scroll",
+                color = Color(0xFF94A3B8).copy(alpha = 0.60f),
+                fontSize = 14.sp,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Medium,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(16.dp),
+                lineHeight = 22.sp,
             )
         }
     }

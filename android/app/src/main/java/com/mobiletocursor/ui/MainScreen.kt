@@ -8,6 +8,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -329,70 +330,111 @@ private fun ControlScreen(
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        // ── Top bar: Vexra | Connected | ⚙ Settings ──
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text("Vexra", color = VexraTextPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.5).sp)
-            Spacer(Modifier.weight(1f))
-            Box(Modifier.size(8.dp).background(VexraGreen, CircleShape))
-            Spacer(Modifier.width(8.dp))
-            Text("Connected", color = VexraGreen, fontSize = 13.sp, fontWeight = FontWeight.Medium)
-            Spacer(Modifier.width(12.dp))
-            IconButton(onClick = onSettingsClick, modifier = Modifier.size(36.dp)) {
-                Icon(Icons.Default.Settings, "Settings", tint = VexraTextMuted, modifier = Modifier.size(20.dp))
-            }
-        }
+    Box(modifier = Modifier.fillMaxSize()) {
+        // ── Ambient glow orbs behind everything ──
+        VexraGlowBackground()
 
-        // ── Scrollable keyboard controls (only in keyboard mode) ──
-        if (uiState.mode == MainViewModel.InputMode.KEYBOARD) {
-            Column(
+        Column(modifier = Modifier.fillMaxSize()) {
+            // ── Top bar: Vexra · [Connected pill] ──
+            Row(
                 modifier = Modifier
-                    .weight(1f, fill = false)
-                    .verticalScroll(rememberScrollState()),
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 20.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                VexraModifierKeys(uiState.activeModifiers, onToggleModifier)
-                VexraSpecialKeys(onSpecialKey)
-                VexraShortcuts(onSpecialKey, onSendText)
-
-                if (uiState.sentHistory.isNotEmpty()) {
-                    VexraSentHistory(uiState.sentHistory)
-                }
-                Spacer(Modifier.height(8.dp))
-            }
-        }
-
-        // ── Mode toggle ──
-        VexraModeToggle(
-            currentMode = uiState.mode,
-            onToggle = {
-                onToggleMode()
-                if (uiState.mode == MainViewModel.InputMode.KEYBOARD) {
-                    keyboardController?.hide()
-                }
-            },
-        )
-
-        // ── Trackpad or text input ──
-        when (uiState.mode) {
-            MainViewModel.InputMode.TRACKPAD -> {
-                TrackpadSurface(
-                    onMove = onTrackpadMove, onTap = onTrackpadTap,
-                    onLongPress = onTrackpadLongPress, onScroll = onTrackpadScroll,
-                    onDragStart = onDragStart, onDragEnd = onDragEnd,
-                    onTwoFingerTap = onTwoFingerTap,
-                    onThreeFingerSwipe = onThreeFingerSwipe, onThreeFingerTap = onThreeFingerTap,
-                    onFourFingerSwipe = onFourFingerSwipe, onFourFingerTap = onFourFingerTap,
-                    modifier = Modifier.fillMaxWidth().weight(1f).padding(horizontal = 16.dp, vertical = 8.dp),
+                Text(
+                    "Vexra",
+                    color = Color.White,
+                    fontSize = 21.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = (-0.5).sp,
                 )
+                Spacer(Modifier.weight(1f))
+
+                // Connected pill (matches Stitch)
+                Row(
+                    modifier = Modifier
+                        .background(
+                            color = Color.White.copy(alpha = 0.05f),
+                            shape = RoundedCornerShape(50),
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = Color.White.copy(alpha = 0.10f),
+                            shape = RoundedCornerShape(50),
+                        )
+                        .padding(horizontal = 14.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(
+                        Modifier
+                            .size(8.dp)
+                            .background(VexraGreen, CircleShape),
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        "Connected",
+                        color = Color(0xFFE2E8F0),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        letterSpacing = 0.5.sp,
+                    )
+                }
             }
-            MainViewModel.InputMode.KEYBOARD -> {
-                VexraTextInput(onSend = onSendText)
+
+            // ── Scrollable keyboard controls (only in keyboard mode) ──
+            if (uiState.mode == MainViewModel.InputMode.KEYBOARD) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f, fill = false)
+                        .verticalScroll(rememberScrollState()),
+                ) {
+                    VexraModifierKeys(uiState.activeModifiers, onToggleModifier)
+                    VexraSpecialKeys(onSpecialKey)
+                    VexraShortcuts(onSpecialKey, onSendText)
+
+                    if (uiState.sentHistory.isNotEmpty()) {
+                        VexraSentHistory(uiState.sentHistory)
+                    }
+                    Spacer(Modifier.height(8.dp))
+                }
             }
+
+            // ── Trackpad or text input ──
+            when (uiState.mode) {
+                MainViewModel.InputMode.TRACKPAD -> {
+                    TrackpadSurface(
+                        onMove = onTrackpadMove, onTap = onTrackpadTap,
+                        onLongPress = onTrackpadLongPress, onScroll = onTrackpadScroll,
+                        onDragStart = onDragStart, onDragEnd = onDragEnd,
+                        onTwoFingerTap = onTwoFingerTap,
+                        onThreeFingerSwipe = onThreeFingerSwipe, onThreeFingerTap = onThreeFingerTap,
+                        onFourFingerSwipe = onFourFingerSwipe, onFourFingerTap = onFourFingerTap,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .padding(horizontal = 20.dp, vertical = 8.dp),
+                    )
+                }
+                MainViewModel.InputMode.KEYBOARD -> {
+                    VexraTextInput(onSend = onSendText)
+                }
+            }
+
+            // ── Bottom toggle bar (Stitch pill) ──
+            VexraModeToggle(
+                currentMode = uiState.mode,
+                onToggle = {
+                    onToggleMode()
+                    if (uiState.mode == MainViewModel.InputMode.KEYBOARD) {
+                        keyboardController?.hide()
+                    }
+                },
+                onSettingsClick = onSettingsClick,
+            )
+
+            Spacer(Modifier.height(16.dp))
         }
-        Spacer(Modifier.height(4.dp))
     }
 }
 

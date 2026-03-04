@@ -4,8 +4,11 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -23,11 +26,13 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Keyboard
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -184,44 +189,122 @@ fun VexraSentHistory(items: List<String>) {
 }
 
 
-/** Mode toggle — Keyboard / Trackpad with purple highlight. */
+/** Mode toggle — Stitch-style bottom pill bar with glow underline. */
 @Composable
-fun VexraModeToggle(currentMode: MainViewModel.InputMode, onToggle: () -> Unit) {
+fun VexraModeToggle(
+    currentMode: MainViewModel.InputMode,
+    onToggle: () -> Unit,
+    onSettingsClick: (() -> Unit)? = null,
+) {
     val isKeyboard = currentMode == MainViewModel.InputMode.KEYBOARD
 
-    Surface(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
-        shape = RoundedCornerShape(14.dp),
-        color = VexraCard,
-        border = BorderStroke(1.dp, VexraBorder),
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(Modifier.fillMaxWidth().padding(4.dp), Arrangement.Center, Alignment.CenterVertically) {
-            Button(
-                onClick = { if (!isKeyboard) onToggle() },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isKeyboard) VexraAccent else Color.Transparent,
-                    contentColor = if (isKeyboard) Color.White else VexraTextDim,
-                ),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.weight(1f),
+        // Settings icon (left of pill)
+        if (onSettingsClick != null) {
+            IconButton(
+                onClick = onSettingsClick,
+                modifier = Modifier.size(40.dp),
             ) {
-                Icon(Icons.Default.Keyboard, null, Modifier.size(18.dp))
-                Spacer(Modifier.width(6.dp))
-                Text("Keyboard", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                Icon(
+                    Icons.Default.Settings,
+                    "Settings",
+                    tint = Color(0xFF94A3B8),
+                    modifier = Modifier.size(20.dp),
+                )
             }
-            Spacer(Modifier.width(4.dp))
-            Button(
-                onClick = { if (isKeyboard) onToggle() },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (!isKeyboard) VexraAccent else Color.Transparent,
-                    contentColor = if (!isKeyboard) Color.White else VexraTextDim,
-                ),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.weight(1f),
+            Spacer(Modifier.width(8.dp))
+        }
+
+        // Pill container
+        Row(
+            modifier = Modifier
+                .background(
+                    color = Color.Black.copy(alpha = 0.50f),
+                    shape = RoundedCornerShape(50),
+                )
+                .border(
+                    width = 1.dp,
+                    color = Color.White.copy(alpha = 0.10f),
+                    shape = RoundedCornerShape(50),
+                )
+                .padding(6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            // Keyboard option
+            Box(
+                modifier = Modifier
+                    .then(
+                        if (isKeyboard) Modifier.background(
+                            VexraAccent.copy(alpha = 0.10f),
+                            RoundedCornerShape(50),
+                        ) else Modifier
+                    )
+                    .clickable { if (!isKeyboard) onToggle() }
+                    .padding(horizontal = 28.dp, vertical = 12.dp),
+                contentAlignment = Alignment.Center,
             ) {
-                Icon(Icons.Default.TouchApp, null, Modifier.size(18.dp))
-                Spacer(Modifier.width(6.dp))
-                Text("Trackpad", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.Keyboard, null,
+                        tint = if (isKeyboard) VexraAccent else Color(0xFF94A3B8),
+                        modifier = Modifier.size(20.dp),
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        "Keyboard",
+                        color = if (isKeyboard) VexraAccent else Color(0xFF94A3B8),
+                        fontSize = 14.sp,
+                        fontWeight = if (isKeyboard) FontWeight.Bold else FontWeight.Medium,
+                    )
+                }
+            }
+
+            // Trackpad option
+            Box(contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Box(
+                        modifier = Modifier
+                            .then(
+                                if (!isKeyboard) Modifier.background(
+                                    VexraAccent.copy(alpha = 0.10f),
+                                    RoundedCornerShape(50),
+                                ) else Modifier
+                            )
+                            .clickable { if (isKeyboard) onToggle() }
+                            .padding(horizontal = 28.dp, vertical = 12.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Default.TouchApp, null,
+                                tint = if (!isKeyboard) VexraAccent else Color(0xFF94A3B8),
+                                modifier = Modifier.size(20.dp),
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                "Trackpad",
+                                color = if (!isKeyboard) VexraAccent else Color(0xFF94A3B8),
+                                fontSize = 14.sp,
+                                fontWeight = if (!isKeyboard) FontWeight.Bold else FontWeight.Medium,
+                            )
+                        }
+                    }
+                    // Glowing underline for active trackpad
+                    if (!isKeyboard) {
+                        Box(
+                            Modifier
+                                .width(32.dp)
+                                .height(3.dp)
+                                .background(VexraAccent, RoundedCornerShape(50)),
+                        )
+                    }
+                }
             }
         }
     }
