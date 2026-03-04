@@ -1,13 +1,14 @@
 """
 Vexra — Desktop Receiver (GUI)
 
-Premium windowed TCP server with Stitch-designed UI.
+Premium windowed TCP server with Stitch-designed UI + glow orb effects.
 Consistent dark aesthetic matching the Vexra landing page.
 Runs asyncio in a background thread, updates tkinter via queue.
 """
 
 import asyncio
 import logging
+import math
 import os
 import queue
 import secrets
@@ -29,13 +30,11 @@ def resource_path(relative_path: str) -> str:
     return os.path.join(os.path.abspath(os.path.dirname(__file__)), relative_path)
 
 
-# ── Logging → queue bridge ─────────────────────
+# ── Logging → queue ───────────────────────────
 _log_queue: queue.Queue = queue.Queue()
 
 
 class QueueHandler(logging.Handler):
-    """Route log records to thread-safe queue for GUI consumption."""
-
     def emit(self, record: logging.LogRecord) -> None:
         try:
             _log_queue.put(("log", self.format(record)))
@@ -51,13 +50,11 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# ── State ──────────────────────────────────────
 AUTH_PIN = f"{secrets.randbelow(1_000_000):06d}"
 _connection_lock = asyncio.Lock()
 
 
 def get_local_ips() -> list[str]:
-    """Return all local IPv4 addresses."""
     ips = []
     try:
         for info in socket.getaddrinfo(socket.gethostname(), None, socket.AF_INET):
@@ -73,11 +70,7 @@ def get_local_ips() -> list[str]:
 #  TCP Server (background thread)
 # ═══════════════════════════════════════════════
 
-async def handle_client(
-    reader: asyncio.StreamReader,
-    writer: asyncio.StreamWriter,
-) -> None:
-    """Handle a single phone connection with PIN auth."""
+async def handle_client(reader, writer) -> None:
     peer = writer.get_extra_info("peername")
     logger.info("📱  Phone connected: %s", peer)
     _log_queue.put(("status", "connecting"))
@@ -103,19 +96,15 @@ async def handle_client(
                 writer.write(b'{"status":"AUTH_FAIL","reason":"timeout"}\n')
                 await writer.drain()
                 return
-
             if not data:
                 return
-
             line = data.decode("utf-8", errors="replace")
             event = parse_event(line)
-
             if event is None or event.get("type") != "AUTH":
                 logger.warning("⛔  Expected AUTH from %s", peer)
                 writer.write(b'{"status":"AUTH_FAIL","reason":"expected_auth"}\n')
                 await writer.drain()
                 return
-
             if event.get("pin") != AUTH_PIN:
                 logger.warning("⛔  Wrong PIN from %s", peer)
                 writer.write(b'{"status":"AUTH_FAIL","reason":"wrong_pin"}\n')
@@ -137,9 +126,8 @@ async def handle_client(
                 if event is None or event.get("type") == "AUTH":
                     continue
                 dispatch(event)
-
         except asyncio.CancelledError:
-            logger.info("Client handler cancelled")
+            pass
         except ConnectionResetError:
             logger.warning("Phone disconnected abruptly")
         except Exception:
@@ -156,7 +144,6 @@ async def handle_client(
 
 
 async def run_server() -> None:
-    """Start the TCP server."""
     server = await asyncio.start_server(handle_client, host=HOST, port=PORT)
     logger.info("Listening on port %d", PORT)
     _log_queue.put(("status", "waiting"))
@@ -171,7 +158,6 @@ async def run_server() -> None:
 
 
 def _server_thread() -> None:
-    """Background thread entry."""
     import warnings
     warnings.filterwarnings("ignore", category=ResourceWarning)
     try:
@@ -181,31 +167,52 @@ def _server_thread() -> None:
 
 
 # ═══════════════════════════════════════════════
-#  GUI — Stitch-designed premium dark theme
+#  Design tokens (Stitch: #7b5ae7, dark, Inter)
 # ═══════════════════════════════════════════════
 
-# Color tokens (from Stitch: #7b5ae7 purple, dark mode, Inter, round-4)
 BG = "#000000"
 SURFACE_1 = "#0a0a0c"
 SURFACE_2 = "#111114"
-SURFACE_3 = "#18181c"
 BORDER = "#1f1f24"
-BORDER_HOVER = "#2a2a30"
 TEXT = "#f5f5f7"
-TEXT_SECONDARY = "#a1a1a8"
-TEXT_MUTED = "#6b6b74"
+TEXT_SEC = "#a1a1a8"
+TEXT_MUT = "#6b6b74"
 ACCENT = "#7b5ae7"
-ACCENT_HOVER = "#9478f0"
-ACCENT_DIM = "#4a3590"
+ACCENT_H = "#9478f0"
+ACCENT_D = "#4a3590"
 GREEN = "#34d399"
 YELLOW = "#fbbf24"
 RED = "#f87171"
 
-RADIUS = 8  # round-4 from Stitch
+W, H = 480, 660
+
+
+# ── Glow orb helper ───────────────────────────
+
+def _draw_glow(canvas: tk.Canvas, cx: int, cy: int, r: int,
+               color_rgb: tuple, layers: int = 12) -> list:
+    """Draw soft radial glow using concentric ovals with decreasing opacity."""
+    items = []
+    base_r, base_g, base_b = color_rgb
+    for i in range(layers, 0, -1):
+        frac = i / layers
+        radius = int(r * frac)
+        # Blend toward black (#000) as we go outward
+        blend = frac ** 0.5
+        cr = int(base_r * blend)
+        cg = int(base_g * blend)
+        cb = int(base_b * blend)
+        color = f"#{cr:02x}{cg:02x}{cb:02x}"
+        item = canvas.create_oval(
+            cx - radius, cy - radius, cx + radius, cy + radius,
+            fill=color, outline="",
+        )
+        items.append(item)
+    return items
 
 
 class VexraApp:
-    """Premium windowed receiver matching Stitch design."""
+    """Premium receiver with landing-page glow effects."""
 
     def __init__(self) -> None:
         self.root = tk.Tk()
@@ -213,10 +220,9 @@ class VexraApp:
         self.root.configure(bg=BG)
         self.root.resizable(False, False)
 
-        w, h = 480, 640
         sx = self.root.winfo_screenwidth()
         sy = self.root.winfo_screenheight()
-        self.root.geometry(f"{w}x{h}+{(sx - w) // 2}+{(sy - h) // 2}")
+        self.root.geometry(f"{W}x{H}+{(sx - W) // 2}+{(sy - H) // 2}")
 
         ico = resource_path("vexra.ico")
         if os.path.isfile(ico):
@@ -225,187 +231,228 @@ class VexraApp:
             except Exception:
                 pass
 
+        self._anim_step = 0
+        self._glow_items = []
         self._build()
         self._poll()
-
-    # ── Layout ──
+        self._animate_glow()
 
     def _build(self) -> None:
-        r = self.root
+        # ── Background canvas with glow orbs ──
+        self._bg_canvas = tk.Canvas(
+            self.root, width=W, height=H,
+            bg=BG, highlightthickness=0, bd=0,
+        )
+        self._bg_canvas.place(x=0, y=0, width=W, height=H)
 
-        # ── Top accent gradient bar ──
-        top_bar = tk.Canvas(r, width=480, height=3, bg=BG, highlightthickness=0)
-        top_bar.pack(fill="x")
-        # Simulate gradient: purple center, fading edges
-        top_bar.create_rectangle(0, 0, 480, 3, fill="#0d0d12", outline="")
-        top_bar.create_rectangle(40, 0, 440, 3, fill=ACCENT_DIM, outline="")
-        top_bar.create_rectangle(100, 0, 380, 3, fill=ACCENT, outline="")
+        # Draw glow orbs (matching landing page positions)
+        # Top-right: purple glow
+        self._glow_tr = _draw_glow(
+            self._bg_canvas, 420, 60, 220, (123, 90, 231), 15
+        )
+        # Bottom-left: pink/purple glow
+        self._glow_bl = _draw_glow(
+            self._bg_canvas, 40, 580, 200, (180, 60, 180), 12
+        )
+        # Center: subtle blue glow
+        self._glow_c = _draw_glow(
+            self._bg_canvas, 240, 320, 280, (60, 50, 140), 10
+        )
 
-        # ── Header section ──
-        hdr = tk.Frame(r, bg=BG)
+        self._glow_items = [
+            (self._glow_tr, 420, 60, 220, (123, 90, 231), 15),
+            (self._glow_bl, 40, 580, 200, (180, 60, 180), 12),
+            (self._glow_c, 240, 320, 280, (60, 50, 140), 10),
+        ]
+
+        # ── Top accent bar ──
+        self._bg_canvas.create_rectangle(0, 0, W, 3, fill="#080810", outline="")
+        self._bg_canvas.create_rectangle(40, 0, 440, 3, fill=ACCENT_D, outline="")
+        self._bg_canvas.create_rectangle(120, 0, 360, 3, fill=ACCENT, outline="")
+
+        # ── Main UI container (sits on top of canvas) ──
+        main = tk.Frame(self.root, bg="")
+        main.place(x=0, y=0, width=W, height=H)
+        # Make frame transparent-ish by matching BG
+        main.configure(bg=BG)
+
+        # We use a simple approach: transparent-bg labels/frames on top
+        # Since tkinter doesn't support true transparency, we use BG color
+        # The glow effect shows through the dark background
+
+        # ── Header ──
+        hdr = tk.Frame(main, bg=BG)
         hdr.pack(fill="x", pady=(36, 0))
 
         tk.Label(
             hdr, text="V E X R A",
-            font=("Segoe UI", 28, "bold"),
-            fg=TEXT, bg=BG,
+            font=("Segoe UI", 28, "bold"), fg=TEXT, bg=BG,
         ).pack()
 
         tk.Label(
             hdr, text="Your phone. Your trackpad. No wires.",
-            font=("Segoe UI", 10), fg=TEXT_MUTED, bg=BG,
+            font=("Segoe UI", 10), fg=TEXT_MUT, bg=BG,
         ).pack(pady=(6, 0))
 
         # ── Status pill ──
-        pill_wrap = tk.Frame(r, bg=BG)
-        pill_wrap.pack(pady=(20, 0))
+        pw = tk.Frame(main, bg=BG)
+        pw.pack(pady=(20, 0))
 
         pill = tk.Frame(
-            pill_wrap, bg=SURFACE_2,
+            pw, bg=SURFACE_2,
             highlightbackground=BORDER, highlightthickness=1,
             padx=14, pady=5,
         )
         pill.pack()
 
-        self._status_dot = tk.Label(
+        self._sdot = tk.Label(
             pill, text="●", font=("Segoe UI", 9), fg=YELLOW, bg=SURFACE_2,
         )
-        self._status_dot.pack(side="left")
+        self._sdot.pack(side="left")
 
-        self._status_text = tk.Label(
+        self._stxt = tk.Label(
             pill, text="  Starting…",
-            font=("Segoe UI", 10), fg=TEXT_SECONDARY, bg=SURFACE_2,
+            font=("Segoe UI", 10), fg=TEXT_SEC, bg=SURFACE_2,
         )
-        self._status_text.pack(side="left")
+        self._stxt.pack(side="left")
 
         # ── Connection card ──
         card = tk.Frame(
-            r, bg=SURFACE_2,
+            main, bg=SURFACE_2,
             highlightbackground=BORDER, highlightthickness=1,
         )
         card.pack(fill="x", padx=28, pady=(20, 0))
 
-        # -- Top half: IP + Port --
-        top_half = tk.Frame(card, bg=SURFACE_2, padx=20, pady=16)
-        top_half.pack(fill="x")
+        # Top: IP + Port
+        top = tk.Frame(card, bg=SURFACE_2, padx=20, pady=16)
+        top.pack(fill="x")
 
-        left = tk.Frame(top_half, bg=SURFACE_2)
-        left.pack(side="left", anchor="nw")
-
-        tk.Label(
-            left, text="IP ADDRESS",
-            font=("Segoe UI", 8, "bold"), fg=TEXT_MUTED, bg=SURFACE_2,
-        ).pack(anchor="w")
-
+        lf = tk.Frame(top, bg=SURFACE_2)
+        lf.pack(side="left", anchor="nw")
+        tk.Label(lf, text="IP ADDRESS", font=("Segoe UI", 8, "bold"),
+                 fg=TEXT_MUT, bg=SURFACE_2).pack(anchor="w")
         ips = get_local_ips()
         ip = ips[0] if ips else "No network"
-        tk.Label(
-            left, text=ip,
-            font=("Segoe UI", 13), fg=TEXT, bg=SURFACE_2,
-        ).pack(anchor="w", pady=(4, 0))
+        tk.Label(lf, text=ip, font=("Segoe UI", 13),
+                 fg=TEXT, bg=SURFACE_2).pack(anchor="w", pady=(4, 0))
 
-        right = tk.Frame(top_half, bg=SURFACE_2)
-        right.pack(side="right", anchor="ne")
+        rf = tk.Frame(top, bg=SURFACE_2)
+        rf.pack(side="right", anchor="ne")
+        tk.Label(rf, text="PORT", font=("Segoe UI", 8, "bold"),
+                 fg=TEXT_MUT, bg=SURFACE_2).pack(anchor="e")
+        tk.Label(rf, text=str(PORT), font=("Segoe UI", 13),
+                 fg=TEXT, bg=SURFACE_2).pack(anchor="e", pady=(4, 0))
 
-        tk.Label(
-            right, text="PORT",
-            font=("Segoe UI", 8, "bold"), fg=TEXT_MUTED, bg=SURFACE_2,
-        ).pack(anchor="e")
-
-        tk.Label(
-            right, text=str(PORT),
-            font=("Segoe UI", 13), fg=TEXT, bg=SURFACE_2,
-        ).pack(anchor="e", pady=(4, 0))
-
-        # -- Divider --
+        # Divider
         tk.Frame(card, bg=BORDER, height=1).pack(fill="x", padx=20)
 
-        # -- Bottom half: PIN --
-        bot_half = tk.Frame(card, bg=SURFACE_2, padx=20, pady=16)
-        bot_half.pack(fill="x")
+        # Bottom: PIN
+        bot = tk.Frame(card, bg=SURFACE_2, padx=20, pady=16)
+        bot.pack(fill="x")
+        tk.Label(bot, text="CONNECTION PIN", font=("Segoe UI", 8, "bold"),
+                 fg=TEXT_MUT, bg=SURFACE_2).pack(anchor="w")
 
-        tk.Label(
-            bot_half, text="CONNECTION PIN",
-            font=("Segoe UI", 8, "bold"), fg=TEXT_MUTED, bg=SURFACE_2,
-        ).pack(anchor="w")
-
-        pin_row = tk.Frame(bot_half, bg=SURFACE_2)
-        pin_row.pack(fill="x", pady=(6, 0))
+        pr = tk.Frame(bot, bg=SURFACE_2)
+        pr.pack(fill="x", pady=(6, 0))
 
         self._pin = tk.Label(
-            pin_row, text=self._fmt_pin(AUTH_PIN),
+            pr, text=self._fpin(AUTH_PIN),
             font=("Consolas", 26, "bold"), fg=ACCENT, bg=SURFACE_2,
         )
         self._pin.pack(side="left")
 
         regen = tk.Label(
-            pin_row, text="↻  Regenerate",
-            font=("Segoe UI", 9), fg=TEXT_MUTED, bg=SURFACE_2, cursor="hand2",
+            pr, text="↻  Regenerate",
+            font=("Segoe UI", 9), fg=TEXT_MUT, bg=SURFACE_2, cursor="hand2",
         )
         regen.pack(side="right", pady=(10, 0))
         regen.bind("<Button-1>", lambda e: self._new_pin())
-        regen.bind("<Enter>", lambda e: regen.configure(fg=ACCENT_HOVER))
-        regen.bind("<Leave>", lambda e: regen.configure(fg=TEXT_MUTED))
+        regen.bind("<Enter>", lambda e: regen.configure(fg=ACCENT_H))
+        regen.bind("<Leave>", lambda e: regen.configure(fg=TEXT_MUT))
 
         # ── Activity log ──
-        log_wrap = tk.Frame(r, bg=BG)
-        log_wrap.pack(fill="both", expand=True, padx=28, pady=(16, 0))
+        lw = tk.Frame(main, bg=BG)
+        lw.pack(fill="both", expand=True, padx=28, pady=(16, 0))
 
-        tk.Label(
-            log_wrap, text="ACTIVITY",
-            font=("Segoe UI", 8, "bold"), fg=TEXT_MUTED, bg=BG,
-        ).pack(anchor="w", pady=(0, 6))
+        tk.Label(lw, text="ACTIVITY", font=("Segoe UI", 8, "bold"),
+                 fg=TEXT_MUT, bg=BG).pack(anchor="w", pady=(0, 6))
 
-        log_border = tk.Frame(
-            log_wrap, bg=SURFACE_1,
+        lb = tk.Frame(
+            lw, bg=SURFACE_1,
             highlightbackground=BORDER, highlightthickness=1,
         )
-        log_border.pack(fill="both", expand=True)
+        lb.pack(fill="both", expand=True)
 
         self._log = tk.Text(
-            log_border, bg=SURFACE_1, fg=TEXT_MUTED,
+            lb, bg=SURFACE_1, fg=TEXT_MUT,
             font=("Consolas", 9), relief="flat", bd=0,
             padx=14, pady=12, wrap="word",
             state="disabled", cursor="arrow",
-            insertbackground=TEXT_MUTED, selectbackground=ACCENT_DIM,
+            insertbackground=TEXT_MUT, selectbackground=ACCENT_D,
             highlightthickness=0,
         )
         self._log.pack(fill="both", expand=True)
-
         self._log.tag_configure("ok", foreground=GREEN)
         self._log.tag_configure("warn", foreground=YELLOW)
         self._log.tag_configure("err", foreground=RED)
-        self._log.tag_configure("dim", foreground=TEXT_MUTED)
+        self._log.tag_configure("dim", foreground=TEXT_MUT)
 
         # ── Bottom bar ──
-        foot = tk.Frame(r, bg=BG, padx=28, pady=12)
+        foot = tk.Frame(main, bg=BG, padx=28, pady=12)
         foot.pack(fill="x")
 
-        tk.Label(
-            foot, text="v1.0.0",
-            font=("Segoe UI", 8), fg="#2a2a30", bg=BG,
-        ).pack(side="left")
+        tk.Label(foot, text="v1.0.0", font=("Segoe UI", 8),
+                 fg="#2a2a30", bg=BG).pack(side="left")
 
-        quit_lbl = tk.Label(
-            foot, text="✕  Quit",
-            font=("Segoe UI", 9, "bold"), fg=TEXT_MUTED, bg=BG, cursor="hand2",
+        ql = tk.Label(
+            foot, text="✕  Quit", font=("Segoe UI", 9, "bold"),
+            fg=TEXT_MUT, bg=BG, cursor="hand2",
         )
-        quit_lbl.pack(side="right")
-        quit_lbl.bind("<Button-1>", lambda e: self.root.destroy())
-        quit_lbl.bind("<Enter>", lambda e: quit_lbl.configure(fg=RED))
-        quit_lbl.bind("<Leave>", lambda e: quit_lbl.configure(fg=TEXT_MUTED))
+        ql.pack(side="right")
+        ql.bind("<Button-1>", lambda e: self.root.destroy())
+        ql.bind("<Enter>", lambda e: ql.configure(fg=RED))
+        ql.bind("<Leave>", lambda e: ql.configure(fg=TEXT_MUT))
 
-        # ── Bottom accent gradient bar ──
-        bot_bar = tk.Canvas(r, width=480, height=2, bg=BG, highlightthickness=0)
-        bot_bar.pack(fill="x", side="bottom")
-        bot_bar.create_rectangle(0, 0, 480, 2, fill="#0d0d12", outline="")
-        bot_bar.create_rectangle(60, 0, 420, 2, fill=ACCENT_DIM, outline="")
-        bot_bar.create_rectangle(140, 0, 340, 2, fill=ACCENT, outline="")
+        # ── Bottom accent bar ──
+        ba = tk.Canvas(main, width=W, height=2, bg=BG, highlightthickness=0)
+        ba.pack(fill="x", side="bottom")
+        ba.create_rectangle(0, 0, W, 2, fill="#080810", outline="")
+        ba.create_rectangle(60, 0, 420, 2, fill=ACCENT_D, outline="")
+        ba.create_rectangle(160, 0, 320, 2, fill=ACCENT, outline="")
+
+    # ── Glow animation ──
+
+    def _animate_glow(self) -> None:
+        """Subtle breathing animation for glow orbs."""
+        self._anim_step += 1
+        t = self._anim_step * 0.03  # slow pace
+
+        for items, cx, cy, base_r, color_rgb, layers in self._glow_items:
+            # Gentle scale oscillation: between 0.85 and 1.15
+            scale = 1.0 + 0.15 * math.sin(t + cx * 0.01)
+            br, bg_c, bb = color_rgb
+
+            for i, item in enumerate(items):
+                frac = (layers - i) / layers
+                radius = int(base_r * frac * scale)
+                blend = frac ** 0.5
+                cr = max(0, min(255, int(br * blend)))
+                cg = max(0, min(255, int(bg_c * blend)))
+                cb = max(0, min(255, int(bb * blend)))
+                color = f"#{cr:02x}{cg:02x}{cb:02x}"
+                self._bg_canvas.coords(
+                    item,
+                    cx - radius, cy - radius, cx + radius, cy + radius,
+                )
+                self._bg_canvas.itemconfigure(item, fill=color)
+
+        # 30ms ≈ ~33fps for smooth animation
+        self.root.after(30, self._animate_glow)
 
     # ── Helpers ──
 
     @staticmethod
-    def _fmt_pin(pin: str) -> str:
+    def _fpin(pin: str) -> str:
         return f"{pin[:3]}   {pin[3:]}"
 
     def _log_msg(self, msg: str) -> None:
@@ -428,15 +475,16 @@ class VexraApp:
             "connecting": (YELLOW, "  Authenticating…"),
             "error": (RED, "  Error"),
         }
-        color, label = m.get(s, (TEXT_MUTED, f"  {s}"))
-        self._status_dot.configure(fg=color)
-        fg = color if s == "connected" else TEXT_SECONDARY
-        self._status_text.configure(text=label, fg=fg)
+        color, label = m.get(s, (TEXT_MUT, f"  {s}"))
+        self._sdot.configure(fg=color)
+        self._stxt.configure(
+            text=label, fg=color if s == "connected" else TEXT_SEC,
+        )
 
     def _new_pin(self) -> None:
         global AUTH_PIN
         AUTH_PIN = f"{secrets.randbelow(1_000_000):06d}"
-        self._pin.configure(text=self._fmt_pin(AUTH_PIN))
+        self._pin.configure(text=self._fpin(AUTH_PIN))
         ts = datetime.now().strftime("%H:%M:%S")
         self._log_msg(f"{ts}  🔄  New PIN generated")
 
@@ -457,17 +505,11 @@ class VexraApp:
         self.root.mainloop()
 
 
-# ═══════════════════════════════════════════════
-#  Entry
-# ═══════════════════════════════════════════════
-
 def main() -> None:
     import warnings
     warnings.filterwarnings("ignore", category=ResourceWarning)
-
     threading.Thread(target=_server_thread, daemon=True).start()
-    app = VexraApp()
-    app.run()
+    VexraApp().run()
 
 
 if __name__ == "__main__":
