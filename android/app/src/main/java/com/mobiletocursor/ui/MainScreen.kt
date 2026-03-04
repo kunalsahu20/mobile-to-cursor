@@ -28,8 +28,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Wifi
-import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -52,6 +52,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mobiletocursor.network.TcpClient
+import com.mobiletocursor.network.UpdateChecker
 import com.mobiletocursor.ui.components.VexraGlowBackground
 import com.mobiletocursor.ui.components.VexraModeToggle
 import com.mobiletocursor.ui.components.VexraSentHistory
@@ -70,14 +71,19 @@ import com.mobiletocursor.ui.theme.VexraTextPrimary
 import com.mobiletocursor.ui.theme.VexraYellow
 import com.mobiletocursor.viewmodel.MainViewModel
 
+/** 3-screen nav state: CONNECTION → CONTROL ⇄ SETTINGS */
+private enum class Screen { CONNECTION, CONTROL, SETTINGS }
+
 /**
- * Root composable — routes between two screens:
- * 1. ConnectionScreen: full-screen Stitch-designed pairing UI
- * 2. ControlScreen: trackpad / keyboard / modifier keys
+ * Root composable — routes between three screens:
+ * 1. ConnectionScreen → full-screen Stitch pairing UI
+ * 2. ControlScreen → trackpad / keyboard / modifier keys
+ * 3. SettingsScreen → general (disconnect) + updates (GitHub)
  */
 @Composable
 fun MainScreen(
     uiState: MainViewModel.UiState,
+    updateState: UpdateChecker.UpdateUiState,
     onSendText: (text: String) -> Unit,
     onSpecialKey: (key: String) -> Unit,
     onToggleModifier: (key: String) -> Unit,
@@ -94,8 +100,19 @@ fun MainScreen(
     onFourFingerTap: () -> Unit,
     onConnect: (host: String, port: Int, pin: String) -> Unit,
     onDisconnect: () -> Unit,
+    onCheckUpdate: () -> Unit,
+    onDownloadUpdate: () -> Unit,
 ) {
     val isConnected = uiState.connectionState == TcpClient.ConnectionState.CONNECTED
+
+    // Auto-navigate: when disconnected, always show ConnectionScreen
+    var currentScreen by rememberSaveable { mutableStateOf(Screen.CONNECTION) }
+    if (!isConnected && currentScreen != Screen.CONNECTION) {
+        currentScreen = Screen.CONNECTION
+    }
+    if (isConnected && currentScreen == Screen.CONNECTION) {
+        currentScreen = Screen.CONTROL
+    }
 
     Box(
         modifier = Modifier
@@ -107,28 +124,28 @@ fun MainScreen(
         VexraGlowBackground()
 
         AnimatedContent(
-            targetState = isConnected,
+            targetState = currentScreen,
             transitionSpec = {
-                if (targetState) {
-                    slideInHorizontally { it } + fadeIn() togetherWith
-                        slideOutHorizontally { -it } + fadeOut()
-                } else {
-                    slideInHorizontally { -it } + fadeIn() togetherWith
-                        slideOutHorizontally { it } + fadeOut()
+                when {
+                    targetState.ordinal > initialState.ordinal ->
+                        slideInHorizontally { it } + fadeIn() togetherWith
+                            slideOutHorizontally { -it } + fadeOut()
+                    else ->
+                        slideInHorizontally { -it } + fadeIn() togetherWith
+                            slideOutHorizontally { it } + fadeOut()
                 }
             },
             label = "screen_switch",
-        ) { connected ->
-            if (!connected) {
-                ConnectionScreen(
+        ) { screen ->
+            when (screen) {
+                Screen.CONNECTION -> ConnectionScreen(
                     connectionState = uiState.connectionState,
                     initialHost = uiState.hostIp,
                     initialPort = uiState.port,
                     initialPin = uiState.pin,
                     onConnect = onConnect,
                 )
-            } else {
-                ControlScreen(
+                Screen.CONTROL -> ControlScreen(
                     uiState = uiState,
                     onSendText = onSendText,
                     onSpecialKey = onSpecialKey,
@@ -144,7 +161,15 @@ fun MainScreen(
                     onThreeFingerTap = onThreeFingerTap,
                     onFourFingerSwipe = onFourFingerSwipe,
                     onFourFingerTap = onFourFingerTap,
+                    onSettingsClick = { currentScreen = Screen.SETTINGS },
+                )
+                Screen.SETTINGS -> SettingsScreen(
+                    connectedHost = uiState.hostIp,
+                    updateState = updateState,
+                    onBack = { currentScreen = Screen.CONTROL },
                     onDisconnect = onDisconnect,
+                    onCheckUpdate = onCheckUpdate,
+                    onDownloadUpdate = onDownloadUpdate,
                 )
             }
         }
@@ -190,25 +215,12 @@ private fun ConnectionScreen(
     ) {
         Spacer(Modifier.height(60.dp))
 
-        // ── Brand header ──
-        Text(
-            "Vexra",
-            color = VexraTextPrimary,
-            fontSize = 40.sp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = (-1).sp,
-        )
+        Text("Vexra", color = VexraTextPrimary, fontSize = 40.sp, fontWeight = FontWeight.Bold, letterSpacing = (-1).sp)
         Spacer(Modifier.height(8.dp))
-        Text(
-            "Your phone. Your trackpad. No wires.",
-            color = VexraTextMuted,
-            fontSize = 15.sp,
-            textAlign = TextAlign.Center,
-        )
+        Text("Your phone. Your trackpad. No wires.", color = VexraTextMuted, fontSize = 15.sp, textAlign = TextAlign.Center)
 
         Spacer(Modifier.height(40.dp))
 
-        // ── Glass card with fields ──
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(24.dp),
@@ -216,57 +228,44 @@ private fun ConnectionScreen(
             border = BorderStroke(1.dp, VexraBorder),
         ) {
             Column(modifier = Modifier.padding(24.dp)) {
-                // IP Address
                 Text("IP ADDRESS", color = VexraTextDim, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                 Spacer(Modifier.height(8.dp))
                 OutlinedTextField(
                     value = host, onValueChange = { host = it },
                     placeholder = { Text("192.168.1.100", color = VexraTextDim) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = fieldColors,
-                    shape = RoundedCornerShape(14.dp),
+                    singleLine = true, modifier = Modifier.fillMaxWidth(),
+                    colors = fieldColors, shape = RoundedCornerShape(14.dp),
                     leadingIcon = { Icon(Icons.Default.Wifi, null, tint = VexraTextDim, modifier = Modifier.size(20.dp)) },
                 )
 
                 Spacer(Modifier.height(20.dp))
-
-                // Port
                 Text("PORT", color = VexraTextDim, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                 Spacer(Modifier.height(8.dp))
                 OutlinedTextField(
                     value = port, onValueChange = { port = it },
                     placeholder = { Text("5050", color = VexraTextDim) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = fieldColors,
-                    shape = RoundedCornerShape(14.dp),
+                    singleLine = true, modifier = Modifier.fillMaxWidth(),
+                    colors = fieldColors, shape = RoundedCornerShape(14.dp),
                     leadingIcon = { Text("<>", color = VexraTextDim, fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 12.dp)) },
                 )
 
                 Spacer(Modifier.height(20.dp))
-
-                // PIN
                 Text("PIN (OPTIONAL)", color = VexraTextDim, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                 Spacer(Modifier.height(8.dp))
                 OutlinedTextField(
                     value = pin, onValueChange = { if (it.length <= 6) pin = it },
                     placeholder = { Text("Enter PIN from desktop", color = VexraTextDim) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = if (isAuthFailed) {
-                        OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = VexraRed, unfocusedBorderColor = VexraRed,
-                            focusedLabelColor = VexraRed, unfocusedLabelColor = VexraRed,
-                            cursorColor = VexraRed,
-                            focusedTextColor = VexraTextPrimary, unfocusedTextColor = VexraTextPrimary,
-                            focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent,
-                        )
-                    } else fieldColors,
+                    singleLine = true, modifier = Modifier.fillMaxWidth(),
+                    colors = if (isAuthFailed) OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = VexraRed, unfocusedBorderColor = VexraRed,
+                        focusedLabelColor = VexraRed, unfocusedLabelColor = VexraRed,
+                        cursorColor = VexraRed,
+                        focusedTextColor = VexraTextPrimary, unfocusedTextColor = VexraTextPrimary,
+                        focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent,
+                    ) else fieldColors,
                     shape = RoundedCornerShape(14.dp),
                     leadingIcon = { Icon(Icons.Default.Lock, null, tint = VexraTextDim, modifier = Modifier.size(20.dp)) },
                 )
-
                 if (isAuthFailed) {
                     Spacer(Modifier.height(8.dp))
                     Text("Wrong PIN — check PIN on your desktop", color = VexraRed, fontSize = 12.sp)
@@ -276,7 +275,6 @@ private fun ConnectionScreen(
 
         Spacer(Modifier.height(32.dp))
 
-        // ── Connect button ──
         Button(
             onClick = { onConnect(host, port.toIntOrNull() ?: 5050, pin) },
             modifier = Modifier.fillMaxWidth().height(56.dp),
@@ -298,14 +296,7 @@ private fun ConnectionScreen(
         }
 
         Spacer(Modifier.weight(1f))
-
-        // ── Version footer ──
-        Text(
-            "v1.0.0",
-            color = VexraTextDim,
-            fontSize = 12.sp,
-            modifier = Modifier.padding(bottom = 24.dp),
-        )
+        Text("v${UpdateChecker.CURRENT_VERSION}", color = VexraTextDim, fontSize = 12.sp, modifier = Modifier.padding(bottom = 24.dp))
     }
 }
 
@@ -331,16 +322,14 @@ private fun ControlScreen(
     onThreeFingerTap: () -> Unit,
     onFourFingerSwipe: (String) -> Unit,
     onFourFingerTap: () -> Unit,
-    onDisconnect: () -> Unit,
+    onSettingsClick: () -> Unit,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // ── Top bar with Disconnect ──
+        // ── Top bar: Vexra | Connected | ⚙ Settings ──
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 14.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text("Vexra", color = VexraTextPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.5).sp)
@@ -349,8 +338,8 @@ private fun ControlScreen(
             Spacer(Modifier.width(8.dp))
             Text("Connected", color = VexraGreen, fontSize = 13.sp, fontWeight = FontWeight.Medium)
             Spacer(Modifier.width(12.dp))
-            IconButton(onClick = onDisconnect, modifier = Modifier.size(36.dp)) {
-                Icon(Icons.Default.WifiOff, "Disconnect", tint = VexraRed, modifier = Modifier.size(20.dp))
+            IconButton(onClick = onSettingsClick, modifier = Modifier.size(36.dp)) {
+                Icon(Icons.Default.Settings, "Settings", tint = VexraTextMuted, modifier = Modifier.size(20.dp))
             }
         }
 
@@ -368,7 +357,6 @@ private fun ControlScreen(
                 if (uiState.sentHistory.isNotEmpty()) {
                     VexraSentHistory(uiState.sentHistory)
                 }
-
                 Spacer(Modifier.height(8.dp))
             }
         }
@@ -388,27 +376,18 @@ private fun ControlScreen(
         when (uiState.mode) {
             MainViewModel.InputMode.TRACKPAD -> {
                 TrackpadSurface(
-                    onMove = onTrackpadMove,
-                    onTap = onTrackpadTap,
-                    onLongPress = onTrackpadLongPress,
-                    onScroll = onTrackpadScroll,
-                    onPinchZoom = onPinchZoom,
-                    onTwoFingerTap = onTwoFingerTap,
-                    onThreeFingerSwipe = onThreeFingerSwipe,
-                    onThreeFingerTap = onThreeFingerTap,
-                    onFourFingerSwipe = onFourFingerSwipe,
-                    onFourFingerTap = onFourFingerTap,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    onMove = onTrackpadMove, onTap = onTrackpadTap,
+                    onLongPress = onTrackpadLongPress, onScroll = onTrackpadScroll,
+                    onPinchZoom = onPinchZoom, onTwoFingerTap = onTwoFingerTap,
+                    onThreeFingerSwipe = onThreeFingerSwipe, onThreeFingerTap = onThreeFingerTap,
+                    onFourFingerSwipe = onFourFingerSwipe, onFourFingerTap = onFourFingerTap,
+                    modifier = Modifier.fillMaxWidth().weight(1f).padding(horizontal = 16.dp, vertical = 8.dp),
                 )
             }
             MainViewModel.InputMode.KEYBOARD -> {
                 VexraTextInput(onSend = onSendText)
             }
         }
-
         Spacer(Modifier.height(4.dp))
     }
 }
@@ -419,16 +398,10 @@ private fun ControlScreen(
 // ═══════════════════════════════════════════════════
 
 @Composable
-private fun VexraModifierKeys(
-    activeModifiers: Set<String>,
-    onToggle: (String) -> Unit,
-) {
+private fun VexraModifierKeys(activeModifiers: Set<String>, onToggle: (String) -> Unit) {
     val modifiers = listOf("Ctrl" to "ctrl", "Shift" to "shift", "Alt" to "alt", "Win" to "win", "Caps" to "caps_lock")
-
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 6.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         modifiers.forEach { (label, key) ->
@@ -436,14 +409,10 @@ private fun VexraModifierKeys(
             val bg = if (isActive) VexraAccent.copy(alpha = 0.3f) else VexraCard
             val fg = if (isActive) VexraAccent else VexraTextMuted
             val border = if (isActive) VexraAccent.copy(alpha = 0.6f) else VexraBorder
-
             Surface(
                 onClick = { onToggle(key) },
-                modifier = Modifier
-                    .weight(1f)
-                    .defaultMinSize(minHeight = 42.dp),
-                shape = RoundedCornerShape(12.dp),
-                color = bg,
+                modifier = Modifier.weight(1f).defaultMinSize(minHeight = 42.dp),
+                shape = RoundedCornerShape(12.dp), color = bg,
                 border = BorderStroke(1.dp, border),
             ) {
                 Column(
@@ -453,11 +422,7 @@ private fun VexraModifierKeys(
                 ) {
                     Text(label, color = fg, fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 1)
                     Spacer(Modifier.height(3.dp))
-                    Box(
-                        modifier = Modifier
-                            .size(5.dp)
-                            .background(if (isActive) VexraAccent else VexraTextDim, CircleShape),
-                    )
+                    Box(Modifier.size(5.dp).background(if (isActive) VexraAccent else VexraTextDim, CircleShape))
                 }
             }
         }

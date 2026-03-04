@@ -25,9 +25,11 @@ class MainActivity : ComponentActivity() {
             MobileToCursorTheme {
                 val viewModel: MainViewModel = viewModel()
                 val uiState by viewModel.uiState.collectAsState()
+                val updateState by viewModel.updateState.collectAsState()
 
                 MainScreen(
                     uiState = uiState,
+                    updateState = updateState,
                     onSendText = viewModel::sendText,
                     onSpecialKey = viewModel::onSpecialKey,
                     onToggleModifier = viewModel::toggleModifier,
@@ -44,6 +46,8 @@ class MainActivity : ComponentActivity() {
                     onFourFingerTap = viewModel::onFourFingerTap,
                     onConnect = viewModel::connect,
                     onDisconnect = viewModel::disconnect,
+                    onCheckUpdate = viewModel::checkForUpdate,
+                    onDownloadUpdate = viewModel::downloadUpdate,
                 )
             }
         }

@@ -6,6 +6,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.mobiletocursor.network.EventProtocol
 import com.mobiletocursor.network.TcpClient
+import com.mobiletocursor.network.UpdateChecker
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -42,6 +43,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
     private val tcpClient = TcpClient(viewModelScope)
+    private val updateChecker = UpdateChecker(application)
+    val updateState = updateChecker.state
 
     /** Track whether we attempted auto-connect so we can show settings on failure. */
     private var autoConnectAttempted = false
@@ -277,6 +280,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun onFourFingerTap() {
         viewModelScope.launch {
             tcpClient.send(EventProtocol.keyPress("win+n"))
+        }
+    }
+
+    // ── Updates ──────────────────────────────────
+
+    fun checkForUpdate() {
+        viewModelScope.launch {
+            updateChecker.checkForUpdate()
+        }
+    }
+
+    fun downloadUpdate() {
+        viewModelScope.launch {
+            updateChecker.downloadAndInstall()
         }
     }
 
