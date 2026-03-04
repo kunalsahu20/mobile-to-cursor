@@ -28,16 +28,10 @@ import kotlin.math.abs
 /**
  * Trackpad gesture surface — glass-morphism design.
  *
- * 1 finger  → cursor move / tap = left click / long press = right click
- * 2 fingers → scroll / drag (hold left button + move)
+ * 1 finger  → cursor move / tap = left click / hold = drag
+ * 2 fingers → scroll / tap = right click
  * 3 fingers → swipe gestures / tap = Search (Win key)
  * 4 fingers → volume · desktop switch / tap = notifications
- *
- * --- 2-finger drag ---
- * When 2 fingers are placed and one moves significantly in one direction
- * while the distance between fingers stays roughly constant, we enter
- * drag mode: left mouse button DOWN → cursor moves → button UP on lift.
- * If fingers pinch/spread instead, we scroll as before.
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -110,8 +104,6 @@ fun TrackpadSurface(
                             2 -> {
                                 lastScrollX = (event.getX(0) + event.getX(1)) / 2f
                                 lastScrollY = (event.getY(0) + event.getY(1)) / 2f
-                                dragHoldTime = event.eventTime.toFloat()
-                                isDragging = 0
                             }
                             3, 4 -> {
                                 multiStartX = avgX(event)
@@ -168,7 +160,7 @@ fun TrackpadSurface(
                                 }
                             }
 
-                            // 2-finger: scroll OR drag
+                            // 2-finger: scroll
                             fingerCount == 2 && pointerCount >= 2 -> {
                                 val midX = (event.getX(0) + event.getX(1)) / 2f
                                 val midY = (event.getY(0) + event.getY(1)) / 2f
@@ -176,37 +168,28 @@ fun TrackpadSurface(
                                 val scrollDy = midY - lastScrollY
                                 multiTotalMovement += abs(scrollDx) + abs(scrollDy)
 
-                                // Drag mode: 2 fingers held > 400ms → left button hold + move
-                                val holdDuration = event.eventTime - dragHoldTime.toLong()
-                                if (holdDuration > 400 && isDragging == 0 && multiTotalMovement > 15f) {
-                                    isDragging = 1
-                                    onDragStart()
-                                }
-
-                                if (isDragging == 1) {
-                                    // Move cursor while dragging (left button is held)
-                                    if (abs(scrollDx) > 0.5f || abs(scrollDy) > 0.5f) {
-                                        onMove(scrollDx.toInt(), scrollDy.toInt())
-                                        lastScrollX = midX
-                                        lastScrollY = midY
-                                    }
-                                } else {
-                                    // Normal 2-finger scroll
-                                    if (abs(scrollDx) > 1f || abs(scrollDy) > 1f) {
-                                        onScroll(
-                                            (scrollDx / 5f).toInt(),
-                                            -(scrollDy / 5f).toInt()
-                                        )
-                                        lastScrollX = midX
-                                        lastScrollY = midY
-                                    }
+                                // Normal 2-finger scroll
+                                if (abs(scrollDx) > 1f || abs(scrollDy) > 1f) {
+                                    onScroll(
+                                        (scrollDx / 5f).toInt(),
+                                        -(scrollDy / 5f).toInt()
+                                    )
+                                    lastScrollX = midX
+                                    lastScrollY = midY
                                 }
                             }
 
-                            // 1-finger cursor movement
+                            // 1-finger cursor movement or drag
                             fingerCount == 1 -> {
                                 val dx = event.x - lastX
                                 val dy = event.y - lastY
+                                
+                                val holdDuration = event.eventTime - downTime.toLong()
+                                if (holdDuration > 400 && isDragging == 0 && totalMovement < 30f) {
+                                    isDragging = 1
+                                    onDragStart()
+                                }
+                                
                                 totalMovement += abs(dx) + abs(dy)
 
                                 if (abs(dx) > 0.5f || abs(dy) > 0.5f) {
@@ -220,8 +203,8 @@ fun TrackpadSurface(
                     }
 
                     MotionEvent.ACTION_POINTER_UP -> {
-                        // If we were dragging, release mouse button
-                        if (isDragging == 1 && fingerCount == 2) {
+                        // If we were dragging on multi-touch, release mouse button
+                        if (isDragging == 1) {
                             onDragEnd()
                             isDragging = 0
                         }
@@ -239,6 +222,9 @@ fun TrackpadSurface(
                         if (isDragging == 1) {
                             onDragEnd()
                             isDragging = 0
+                            fingerCount = 0
+                            maxFingerCount = 0
+                            return@pointerInteropFilter true
                         }
 
                         val duration = event.eventTime - downTime.toLong()
@@ -266,8 +252,8 @@ fun TrackpadSurface(
     ) {
         Box(contentAlignment = Alignment.Center) {
             Text(
-                text = "1 finger → cursor · tap → click\n" +
-                    "2 fingers → scroll · hold → drag\n" +
+                text = "1 finger → cursor · tap → click · hold → drag\n" +
+                    "2 fingers → scroll · tap → right click\n" +
                     "3 fingers → swipe gestures\n" +
                     "4 fingers → volume · desktop switch",
                 color = VexraTextDim,
