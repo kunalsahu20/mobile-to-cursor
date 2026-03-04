@@ -238,17 +238,23 @@ private fun ConnectionScreen(
                 OutlinedTextField(
                     value = host,
                     onValueChange = { newValue ->
-                        // Allow only digits and dots
-                        val filtered = newValue.filter { it.isDigit() || it == '.' }
-                        // Auto-insert dot after completed octets (3 digits without a dot following)
-                        val parts = filtered.split(".")
-                        val autoFormatted = if (parts.size < 4) {
-                            val lastPart = parts.lastOrNull() ?: ""
-                            if (lastPart.length == 3 && !filtered.endsWith(".") && parts.size < 4) {
-                                "$filtered."
-                            } else filtered
-                        } else filtered
-                        host = autoFormatted
+                        // Strip everything except digits
+                        val digits = newValue.filter { it.isDigit() }.take(12)
+                        // Auto-format: insert dot after every 3rd digit, max 4 octets
+                        val sb = StringBuilder()
+                        var octet = 0
+                        var count = 0
+                        for (ch in digits) {
+                            if (octet >= 4) break
+                            sb.append(ch)
+                            count++
+                            if (count == 3 && octet < 3) {
+                                sb.append('.')
+                                count = 0
+                                octet++
+                            }
+                        }
+                        host = sb.toString()
                     },
                     placeholder = { Text("192.168.1.100", color = VexraTextDim) },
                     singleLine = true, modifier = Modifier.fillMaxWidth(),
