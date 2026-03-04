@@ -7,6 +7,24 @@
   <title>Vexra — Your Phone. Your Trackpad. No Wires.</title>
   <meta name="description"
     content="Vexra turns your phone into a wireless trackpad and keyboard for your PC. No cloud, no accounts — just a direct local connection." />
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="favicon.ico" />
+  <link rel="icon" type="image/png" sizes="192x192" href="favicon.png" />
+  <link rel="apple-touch-icon" href="favicon.png" />
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Vexra — Your Phone. Your Trackpad. No Wires." />
+  <meta property="og:description"
+    content="Turn your Android phone into a wireless trackpad & keyboard. Open source, local network, zero cloud." />
+  <meta property="og:image" content="https://vexra.happie.in/og-image.png" />
+  <meta property="og:url" content="https://vexra.happie.in" />
+  <meta property="og:site_name" content="Vexra" />
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Vexra — Your Phone. Your Trackpad. No Wires." />
+  <meta name="twitter:description"
+    content="Turn your Android phone into a wireless trackpad & keyboard. Open source, local network, zero cloud." />
+  <meta name="twitter:image" content="https://vexra.happie.in/og-image.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
@@ -535,6 +553,129 @@
       }
     }
 
+    /* ── How it Works ── */
+    .how-it-works {
+      padding: 80px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .how-it-works__label {
+      text-align: center;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+
+    .how-it-works__title {
+      text-align: center;
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin-bottom: 48px;
+    }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+    }
+
+    .step-card {
+      text-align: center;
+      padding: 40px 24px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.02);
+      transition: all 0.35s;
+    }
+
+    .step-card:hover {
+      border-color: rgba(120, 80, 255, 0.3);
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(120, 80, 255, 0.08);
+    }
+
+    .step-card__num {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      background: var(--accent);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.2rem;
+      margin: 0 auto 20px;
+    }
+
+    .step-card__icon {
+      margin-bottom: 16px;
+      color: var(--muted);
+    }
+
+    .step-card__title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .step-card__desc {
+      font-size: 0.9rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    @media (max-width: 768px) {
+      .steps-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ── App Mockup ── */
+    .app-showcase {
+      text-align: center;
+      padding: 0 0 40px;
+    }
+
+    .app-showcase img {
+      max-width: 320px;
+      width: 100%;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(120, 80, 255, 0.15), 0 8px 24px rgba(0, 0, 0, 0.3);
+      transition: transform 0.4s, box-shadow 0.4s;
+    }
+
+    .app-showcase img:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 0 30px 80px rgba(120, 80, 255, 0.2), 0 12px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    /* ── Version Badge ── */
+    .version-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 14px;
+      border-radius: 100px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: rgba(120, 80, 255, 0.9);
+      background: rgba(120, 80, 255, 0.1);
+      border: 1px solid rgba(120, 80, 255, 0.2);
+      margin-bottom: 16px;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .version-badge:hover {
+      background: rgba(120, 80, 255, 0.15);
+      transform: translateY(-1px);
+    }
+
     /* ── Light Theme ── */
     html.light body {
       background: #f5f5f7;
@@ -637,6 +778,27 @@
       transform: translateY(-2px);
     }
 
+    html.light .step-card {
+      background: rgba(255, 255, 255, 0.65);
+      backdrop-filter: blur(12px);
+    }
+
+    html.light .step-card:hover {
+      border-color: rgba(108, 60, 224, 0.25);
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: 0 20px 60px rgba(108, 60, 224, 0.12), 0 8px 24px rgba(0, 0, 0, 0.06);
+    }
+
+    html.light .app-showcase img {
+      box-shadow: 0 20px 60px rgba(108, 60, 224, 0.12), 0 8px 24px rgba(0, 0, 0, 0.1);
+    }
+
+    html.light .version-badge {
+      color: #6c3ce0;
+      background: rgba(108, 60, 224, 0.08);
+      border-color: rgba(108, 60, 224, 0.2);
+    }
+
     html.light .download::before {
       background: linear-gradient(90deg, transparent, rgba(108, 60, 224, 0.5), rgba(236, 72, 153, 0.4), rgba(59, 130, 246, 0.5), transparent);
     }
@@ -727,6 +889,14 @@
 
   <!-- Hero -->
   <section class="hero container">
+    <a href="https://github.com/kunalsahu20/mobile-to-cursor/releases/latest" target="_blank" class="version-badge"
+      id="version-badge">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+        <path
+          d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.21 11.39.6.11.79-.26.79-.58v-2.23c-3.34.73-4.03-1.42-4.03-1.42-.55-1.39-1.33-1.76-1.33-1.76-1.09-.74.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.49 1 .11-.78.42-1.3.76-1.6-2.67-.31-5.47-1.34-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23.96-.27 1.98-.4 3-.41 1.02.01 2.05.14 3.01.41 2.29-1.55 3.3-1.23 3.3-1.23.66 1.65.24 2.87.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.62-5.48 5.92.43.37.82 1.1.82 2.22v3.29c0 .32.19.69.8.58C20.57 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z" />
+      </svg>
+      Loading...
+    </a>
     <span class="hero__badge">Open Source &middot; Local Network Only</span>
     <h1 class="hero__title">Vexra</h1>
     <p class="hero__subtitle">Your phone. Your trackpad. No wires.</p>
@@ -749,6 +919,11 @@
       </a>
     </div>
   </section>
+
+  <!-- App Showcase -->
+  <div class="app-showcase container">
+    <img src="app-mockup.png" alt="Vexra trackpad interface on a phone" loading="lazy" />
+  </div>
 
   <!-- Features -->
   <section id="features" class="features container">
@@ -839,6 +1014,48 @@
     </div>
   </section>
 
+  <!-- How it Works -->
+  <section class="how-it-works container">
+    <p class="how-it-works__label">How it Works</p>
+    <h2 class="how-it-works__title">Up and running in 60 seconds</h2>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-card__num">1</div>
+        <svg class="step-card__icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="7 10 12 15 17 10" />
+          <line x1="12" y1="15" x2="12" y2="3" />
+        </svg>
+        <h3 class="step-card__title">Install</h3>
+        <p class="step-card__desc">Download the APK on your phone and run Vexra.exe on your PC. That's it — no setup
+          wizards.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-card__num">2</div>
+        <svg class="step-card__icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+          <polyline points="22 4 12 14.01 9 11.01" />
+        </svg>
+        <h3 class="step-card__title">Connect</h3>
+        <p class="step-card__desc">Enter the IP address and optional PIN shown on your desktop receiver. Tap Connect.
+        </p>
+      </div>
+      <div class="step-card">
+        <div class="step-card__num">3</div>
+        <svg class="step-card__icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+          <line x1="12" y1="18" x2="12.01" y2="18" />
+        </svg>
+        <h3 class="step-card__title">Use</h3>
+        <p class="step-card__desc">Your phone is now a wireless trackpad and keyboard. Swipe, tap, type — zero latency.
+        </p>
+      </div>
+    </div>
+  </section>
+
   <section id="download" class="download container">
     <h2 class="download__title">Ready to go wireless?</h2>
     <p class="download__subtitle">Download the Vexra receiver for your desktop and the app for your phone.</p>
@@ -895,6 +1112,32 @@
       </div>
     </div>
   </footer>
+
+  <!-- Version Badge Script -->
+  <script>
+    fetch('https://api.github.com/repos/kunalsahu20/mobile-to-cursor/releases/latest')
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var badge = document.getElementById('version-badge');
+        if (badge && d.tag_name) {
+          badge.textContent = '';
+          var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+          svg.setAttribute('width', '12');
+          svg.setAttribute('height', '12');
+          svg.setAttribute('viewBox', '0 0 24 24');
+          svg.setAttribute('fill', 'currentColor');
+          var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          path.setAttribute('d', 'M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z');
+          svg.appendChild(path);
+          badge.appendChild(svg);
+          badge.appendChild(document.createTextNode(' ' + d.tag_name));
+        }
+      })
+      .catch(function () {
+        var badge = document.getElementById('version-badge');
+        if (badge) badge.style.display = 'none';
+      });
+  </script>
 
 </body>
 
