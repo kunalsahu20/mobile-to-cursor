@@ -44,11 +44,17 @@ A lightweight, open-source remote input system that lets you control your Window
 ## Quick Start
 
 ### Prerequisites
-- **Desktop:** Python 3.10+ with `pynput` installed
+- **Desktop:** Download `Vexra.exe` from [Releases](https://github.com/kunalsahu20/mobile-to-cursor/releases) — **or** Python 3.10+ with `pynput` installed
 - **Phone:** Android 8.0+ device on the same Wi-Fi network
 
 ### 1. Start the Desktop Receiver
 
+**Option A — Standalone .exe (recommended):**
+Download `Vexra.exe` from the [latest release](https://github.com/kunalsahu20/mobile-to-cursor/releases) and double-click to run.
+
+> ⚠️ **Windows SmartScreen Warning:** Since Vexra is an open-source unsigned executable, Windows may show a "Windows protected your PC" warning. Click **"More info" → "Run anyway"** to proceed. The full source code is available on this repo for verification.
+
+**Option B — Run from source:**
 ```bash
 cd desktop
 pip install -r requirements.txt
@@ -80,7 +86,9 @@ vexra/
 │   ├── injector.py             # OS input injection via pynput
 │   ├── config.py               # Port, sensitivity settings
 │   ├── test_client.py          # CLI test tool
-│   └── requirements.txt        # Python dependencies
+│   ├── requirements.txt        # Python dependencies
+│   └── dist/
+│       └── Vexra.exe           # Standalone Windows receiver
 │
 ├── android/                    # Kotlin/Jetpack Compose app
 │   └── app/src/main/java/com/mobiletocursor/
@@ -93,6 +101,10 @@ vexra/
 │       │   └── EventProtocol.kt# JSON event builders
 │       └── viewmodel/
 │           └── MainViewModel.kt# State management & event dispatch
+│
+├── landing-page/               # Vexra website
+│   ├── index.html              # Dark mode landing page
+│   └── white.html              # Light mode landing page
 │
 ├── .gitignore
 ├── LICENSE
