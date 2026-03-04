@@ -13,9 +13,8 @@ A lightweight, open-source remote input system that lets you control your Window
 |---------|--------|
 | 1 finger drag | Move cursor |
 | 1 finger tap | Left click |
-| 1 finger long press | Right click |
+| 1 finger hold | Drag (Left click + Move) |
 | 2 finger scroll | Scroll up/down |
-| 2 finger pinch | Zoom in/out (Ctrl+Scroll) |
 | 2 finger tap | Right click |
 | 3 finger swipe up | Task View (Win+Tab) |
 | 3 finger swipe down | Show Desktop (Win+D) |
