@@ -1,11 +1,11 @@
 package com.mobiletocursor.ui
 
 import android.view.MotionEvent
-import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -16,22 +16,23 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.mobiletocursor.ui.theme.VexraBorder
+import com.mobiletocursor.ui.theme.VexraCard
+import com.mobiletocursor.ui.theme.VexraTextDim
 import kotlin.math.abs
 import kotlin.math.sqrt
 
 /**
- * Trackpad gesture surface with full multi-touch support.
+ * Trackpad gesture surface — glass-morphism design.
  *
  * 1 finger  → cursor move / tap = left click / long press = right click
  * 2 fingers → scroll / pinch = zoom (Ctrl+Scroll) / tap = right click
  * 3 fingers → swipe gestures / tap = Search (Win key)
- * 4 fingers → swipe up/down = volume / swipe left/right = virtual desktop / tap = notifications
+ * 4 fingers → swipe up/down = volume / swipe L/R = virtual desktop / tap = notifications
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -74,17 +75,8 @@ fun TrackpadSurface(
     var multiStartY by remember { mutableFloatStateOf(0f) }
     var multiGestureFired by remember { mutableIntStateOf(0) }
 
-    Box(
+    Surface(
         modifier = modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        MaterialTheme.colorScheme.surfaceVariant,
-                        MaterialTheme.colorScheme.surface,
-                    )
-                )
-            )
             .pointerInteropFilter { event ->
                 val action = event.actionMasked
                 val pointerCount = event.pointerCount
@@ -136,7 +128,6 @@ fun TrackpadSurface(
                                 val deltaY = currentY - multiStartY
                                 multiTotalMovement += abs(deltaX) + abs(deltaY)
 
-                                // Vertical: volume (repeating)
                                 val stepsY = (deltaY / 80f).toInt()
                                 if (stepsY != multiGestureFired) {
                                     val direction = if (stepsY > multiGestureFired) "down" else "up"
@@ -144,7 +135,6 @@ fun TrackpadSurface(
                                     multiGestureFired = stepsY
                                 }
 
-                                // Horizontal: virtual desktop switch (fire once)
                                 if (multiGestureFired == 0 && abs(deltaX) > 100f && abs(deltaX) > abs(deltaY)) {
                                     val dir = if (deltaX > 0) "right" else "left"
                                     onFourFingerSwipe(dir)
@@ -152,7 +142,7 @@ fun TrackpadSurface(
                                 }
                             }
 
-                            // 3-finger gesture (task view / desktop / app switch)
+                            // 3-finger gesture
                             fingerCount == 3 && pointerCount >= 3 -> {
                                 val currentX = avgX(event)
                                 val currentY = avgY(event)
@@ -160,7 +150,6 @@ fun TrackpadSurface(
                                 val deltaY = currentY - multiStartY
                                 multiTotalMovement += abs(deltaX) + abs(deltaY)
 
-                                // Fire once when swiped > 100px in any direction
                                 if (multiGestureFired == 0) {
                                     if (abs(deltaX) > 100f && abs(deltaX) > abs(deltaY)) {
                                         val dir = if (deltaX > 0) "right" else "left"
@@ -182,7 +171,6 @@ fun TrackpadSurface(
                                 val scrollDy = midY - lastScrollY
                                 multiTotalMovement += abs(scrollDx) + abs(scrollDy)
 
-                                // Scroll (center-of-fingers movement)
                                 if (abs(scrollDx) > 1f || abs(scrollDy) > 1f) {
                                     onScroll(
                                         (scrollDx / 5f).toInt(),
@@ -192,13 +180,11 @@ fun TrackpadSurface(
                                     lastScrollY = midY
                                 }
 
-                                // Pinch zoom (distance change between fingers)
                                 val currentDist = fingerDistance(event)
                                 val pinchDelta = currentDist - lastPinchDist
                                 pinchAccumulator += pinchDelta
                                 lastPinchDist = currentDist
 
-                                // Fire zoom event every 60px of pinch distance
                                 val pinchSteps = (pinchAccumulator / 60f).toInt()
                                 if (pinchSteps != 0) {
                                     repeat(abs(pinchSteps)) {
@@ -239,25 +225,11 @@ fun TrackpadSurface(
                         val isTap = duration < 300 && multiGestureFired == 0
 
                         when {
-                            // 4-finger tap → Notification Center
-                            maxFingerCount == 4 && isTap && multiTotalMovement < 50f -> {
-                                onFourFingerTap()
-                            }
-                            // 3-finger tap → Search
-                            maxFingerCount == 3 && isTap && multiTotalMovement < 50f -> {
-                                onThreeFingerTap()
-                            }
-                            // 2-finger tap → Right click
-                            maxFingerCount == 2 && isTap && multiTotalMovement < 30f -> {
-                                onTwoFingerTap()
-                            }
-                            // 1-finger tap/long press
+                            maxFingerCount == 4 && isTap && multiTotalMovement < 50f -> onFourFingerTap()
+                            maxFingerCount == 3 && isTap && multiTotalMovement < 50f -> onThreeFingerTap()
+                            maxFingerCount == 2 && isTap && multiTotalMovement < 30f -> onTwoFingerTap()
                             maxFingerCount == 1 && totalMovement < 20f -> {
-                                if (duration < 300) {
-                                    onTap()
-                                } else {
-                                    onLongPress()
-                                }
+                                if (duration < 300) onTap() else onLongPress()
                             }
                         }
                         fingerCount = 0
@@ -268,18 +240,22 @@ fun TrackpadSurface(
                     else -> false
                 }
             },
-        contentAlignment = Alignment.Center,
+        shape = RoundedCornerShape(16.dp),
+        color = VexraCard,
+        border = BorderStroke(1.dp, VexraBorder),
     ) {
-        Text(
-            text = "1 finger → cursor · tap → click\n" +
-                "2 fingers → scroll · pinch → zoom · tap → right-click\n" +
-                "3 fingers → swipe gestures · tap → search\n" +
-                "4 fingers → volume · desktop switch · tap → notifications",
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
-            fontSize = 12.sp,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(16.dp),
-        )
+        Box(contentAlignment = Alignment.Center) {
+            Text(
+                text = "1 finger → cursor · tap → click\n" +
+                    "2 fingers → scroll · pinch → zoom\n" +
+                    "3 fingers → swipe gestures\n" +
+                    "4 fingers → volume · desktop switch",
+                color = VexraTextDim,
+                fontSize = 12.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(16.dp),
+            )
+        }
     }
 }
 
