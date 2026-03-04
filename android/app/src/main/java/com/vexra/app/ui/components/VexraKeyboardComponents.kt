@@ -1,4 +1,4 @@
-package com.mobiletocursor.ui.components
+package com.vexra.app.ui.components
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
@@ -53,13 +53,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.mobiletocursor.ui.theme.VexraAccent
-import com.mobiletocursor.ui.theme.VexraBorder
-import com.mobiletocursor.ui.theme.VexraCard
-import com.mobiletocursor.ui.theme.VexraTextDim
-import com.mobiletocursor.ui.theme.VexraTextMuted
-import com.mobiletocursor.ui.theme.VexraTextPrimary
-import com.mobiletocursor.viewmodel.MainViewModel
+import com.vexra.app.ui.theme.VexraAccent
+import com.vexra.app.ui.theme.VexraBorder
+import com.vexra.app.ui.theme.VexraCard
+import com.vexra.app.ui.theme.VexraTextDim
+import com.vexra.app.ui.theme.VexraTextMuted
+import com.vexra.app.ui.theme.VexraTextPrimary
+import com.vexra.app.viewmodel.MainViewModel
 
 /**
  * Special keys row — navigation & editing keys with press flash.

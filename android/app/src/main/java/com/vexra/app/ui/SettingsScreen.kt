@@ -1,4 +1,4 @@
-package com.mobiletocursor.ui
+package com.vexra.app.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -37,17 +37,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.mobiletocursor.network.UpdateChecker
-import com.mobiletocursor.ui.components.VexraGlowBackground
-import com.mobiletocursor.ui.theme.VexraAccent
-import com.mobiletocursor.ui.theme.VexraBg
-import com.mobiletocursor.ui.theme.VexraBorder
-import com.mobiletocursor.ui.theme.VexraCard
-import com.mobiletocursor.ui.theme.VexraGreen
-import com.mobiletocursor.ui.theme.VexraRed
-import com.mobiletocursor.ui.theme.VexraTextDim
-import com.mobiletocursor.ui.theme.VexraTextMuted
-import com.mobiletocursor.ui.theme.VexraTextPrimary
+import com.vexra.app.network.UpdateChecker
+import com.vexra.app.ui.components.VexraGlowBackground
+import com.vexra.app.ui.theme.VexraAccent
+import com.vexra.app.ui.theme.VexraBg
+import com.vexra.app.ui.theme.VexraBorder
+import com.vexra.app.ui.theme.VexraCard
+import com.vexra.app.ui.theme.VexraGreen
+import com.vexra.app.ui.theme.VexraRed
+import com.vexra.app.ui.theme.VexraTextDim
+import com.vexra.app.ui.theme.VexraTextMuted
+import com.vexra.app.ui.theme.VexraTextPrimary
 
 /**
  * Settings screen — Stitch design with glass cards.

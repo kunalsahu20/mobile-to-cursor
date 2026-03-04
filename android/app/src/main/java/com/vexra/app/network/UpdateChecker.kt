@@ -1,4 +1,4 @@
-package com.mobiletocursor.network
+package com.vexra.app.network
 
 import android.content.Context
 import android.content.Intent

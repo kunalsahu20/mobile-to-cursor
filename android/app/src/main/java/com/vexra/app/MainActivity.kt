@@ -1,4 +1,4 @@
-package com.mobiletocursor
+package com.vexra.app
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -7,9 +7,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.mobiletocursor.ui.MainScreen
-import com.mobiletocursor.ui.theme.MobileToCursorTheme
-import com.mobiletocursor.viewmodel.MainViewModel
+import com.vexra.app.ui.MainScreen
+import com.vexra.app.ui.theme.MobileToCursorTheme
+import com.vexra.app.viewmodel.MainViewModel
 
 /**
  * Single Activity — sets up Compose with the dark theme

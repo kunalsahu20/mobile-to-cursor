@@ -1,12 +1,12 @@
-package com.mobiletocursor.viewmodel
+package com.vexra.app.viewmodel
 
 import android.app.Application
 import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.mobiletocursor.network.EventProtocol
-import com.mobiletocursor.network.TcpClient
-import com.mobiletocursor.network.UpdateChecker
+import com.vexra.app.network.EventProtocol
+import com.vexra.app.network.TcpClient
+import com.vexra.app.network.UpdateChecker
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

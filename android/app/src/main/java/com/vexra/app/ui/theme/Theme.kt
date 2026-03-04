@@ -1,4 +1,4 @@
-package com.mobiletocursor.ui.theme
+package com.vexra.app.ui.theme
 
 import android.app.Activity
 import androidx.compose.material3.MaterialTheme

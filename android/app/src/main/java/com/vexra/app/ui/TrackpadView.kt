@@ -1,4 +1,4 @@
-package com.mobiletocursor.ui
+package com.vexra.app.ui
 
 import android.view.MotionEvent
 import androidx.compose.foundation.BorderStroke

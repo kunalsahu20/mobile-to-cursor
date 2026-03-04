@@ -1,4 +1,4 @@
-package com.mobiletocursor.network
+package com.vexra.app.network
 
 /**
  * Event protocol — mirrors the desktop receiver's protocol.py.

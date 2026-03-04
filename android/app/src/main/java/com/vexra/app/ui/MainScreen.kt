@@ -1,4 +1,4 @@
-package com.mobiletocursor.ui
+package com.vexra.app.ui
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
@@ -54,25 +54,25 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.mobiletocursor.network.TcpClient
-import com.mobiletocursor.network.UpdateChecker
-import com.mobiletocursor.ui.components.VexraGlowBackground
-import com.mobiletocursor.ui.components.VexraModeToggle
-import com.mobiletocursor.ui.components.VexraSentHistory
-import com.mobiletocursor.ui.components.VexraShortcuts
-import com.mobiletocursor.ui.components.VexraSpecialKeys
-import com.mobiletocursor.ui.components.VexraTextInput
-import com.mobiletocursor.ui.theme.VexraAccent
-import com.mobiletocursor.ui.theme.VexraBg
-import com.mobiletocursor.ui.theme.VexraBorder
-import com.mobiletocursor.ui.theme.VexraCard
-import com.mobiletocursor.ui.theme.VexraGreen
-import com.mobiletocursor.ui.theme.VexraRed
-import com.mobiletocursor.ui.theme.VexraTextDim
-import com.mobiletocursor.ui.theme.VexraTextMuted
-import com.mobiletocursor.ui.theme.VexraTextPrimary
-import com.mobiletocursor.ui.theme.VexraYellow
-import com.mobiletocursor.viewmodel.MainViewModel
+import com.vexra.app.network.TcpClient
+import com.vexra.app.network.UpdateChecker
+import com.vexra.app.ui.components.VexraGlowBackground
+import com.vexra.app.ui.components.VexraModeToggle
+import com.vexra.app.ui.components.VexraSentHistory
+import com.vexra.app.ui.components.VexraShortcuts
+import com.vexra.app.ui.components.VexraSpecialKeys
+import com.vexra.app.ui.components.VexraTextInput
+import com.vexra.app.ui.theme.VexraAccent
+import com.vexra.app.ui.theme.VexraBg
+import com.vexra.app.ui.theme.VexraBorder
+import com.vexra.app.ui.theme.VexraCard
+import com.vexra.app.ui.theme.VexraGreen
+import com.vexra.app.ui.theme.VexraRed
+import com.vexra.app.ui.theme.VexraTextDim
+import com.vexra.app.ui.theme.VexraTextMuted
+import com.vexra.app.ui.theme.VexraTextPrimary
+import com.vexra.app.ui.theme.VexraYellow
+import com.vexra.app.viewmodel.MainViewModel
 
 /** 3-screen nav state: CONNECTION → CONTROL ⇄ SETTINGS */
 private enum class Screen { CONNECTION, CONTROL, SETTINGS }

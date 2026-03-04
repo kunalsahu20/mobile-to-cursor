@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.mobiletocursor"
+    namespace = "com.vexra.app"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.mobiletocursor"
+        applicationId = "com.vexra.app"
         minSdk = 26
         targetSdk = 35
         versionCode = 5

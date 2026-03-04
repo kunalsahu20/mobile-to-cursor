@@ -1,4 +1,4 @@
-package com.mobiletocursor.ui.components
+package com.vexra.app.ui.components
 
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
