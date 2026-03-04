@@ -354,23 +354,23 @@ private fun ControlScreen(
             }
         }
 
-        // ── Scrollable keyboard controls ──
-        Column(
-            modifier = Modifier
-                .weight(if (uiState.mode == MainViewModel.InputMode.KEYBOARD) 1f else 0f, fill = false)
-                .verticalScroll(rememberScrollState()),
-        ) {
-            if (uiState.mode == MainViewModel.InputMode.KEYBOARD) {
+        // ── Scrollable keyboard controls (only in keyboard mode) ──
+        if (uiState.mode == MainViewModel.InputMode.KEYBOARD) {
+            Column(
+                modifier = Modifier
+                    .weight(1f, fill = false)
+                    .verticalScroll(rememberScrollState()),
+            ) {
                 VexraModifierKeys(uiState.activeModifiers, onToggleModifier)
                 VexraSpecialKeys(onSpecialKey)
                 VexraShortcuts(onSpecialKey, onSendText)
-            }
 
-            if (uiState.sentHistory.isNotEmpty()) {
-                VexraSentHistory(uiState.sentHistory)
-            }
+                if (uiState.sentHistory.isNotEmpty()) {
+                    VexraSentHistory(uiState.sentHistory)
+                }
 
-            Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(8.dp))
+            }
         }
 
         // ── Mode toggle ──
