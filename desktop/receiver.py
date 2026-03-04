@@ -1,8 +1,9 @@
 """
 Vexra — Desktop Receiver (GUI)
 
-Premium windowed TCP server matching the Vexra landing page aesthetic.
-Runs asyncio in a background thread, updates tkinter GUI via queue.
+Premium windowed TCP server with Stitch-designed UI.
+Consistent dark aesthetic matching the Vexra landing page.
+Runs asyncio in a background thread, updates tkinter via queue.
 """
 
 import asyncio
@@ -12,7 +13,6 @@ import queue
 import secrets
 import socket
 import sys
-import tempfile
 import threading
 import tkinter as tk
 from datetime import datetime
@@ -34,12 +34,11 @@ _log_queue: queue.Queue = queue.Queue()
 
 
 class QueueHandler(logging.Handler):
-    """Send log records to a thread-safe queue for the GUI."""
+    """Route log records to thread-safe queue for GUI consumption."""
 
     def emit(self, record: logging.LogRecord) -> None:
         try:
-            msg = self.format(record)
-            _log_queue.put(("log", msg))
+            _log_queue.put(("log", self.format(record)))
         except Exception:
             pass
 
@@ -52,7 +51,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# ── Auth & connection state ────────────────────
+# ── State ──────────────────────────────────────
 AUTH_PIN = f"{secrets.randbelow(1_000_000):06d}"
 _connection_lock = asyncio.Lock()
 
@@ -78,13 +77,13 @@ async def handle_client(
     reader: asyncio.StreamReader,
     writer: asyncio.StreamWriter,
 ) -> None:
-    """Handle a single connected phone — requires PIN auth first."""
+    """Handle a single phone connection with PIN auth."""
     peer = writer.get_extra_info("peername")
     logger.info("📱  Phone connected: %s", peer)
     _log_queue.put(("status", "connecting"))
 
     if _connection_lock.locked():
-        logger.warning("⛔  Rejected %s — another device connected", peer)
+        logger.warning("⛔  Rejected %s — busy", peer)
         writer.write(b'{"status":"AUTH_FAIL","reason":"busy"}\n')
         await writer.drain()
         writer.close()
@@ -144,22 +143,22 @@ async def handle_client(
         except ConnectionResetError:
             logger.warning("Phone disconnected abruptly")
         except Exception:
-            logger.exception("Unexpected error in client handler")
+            logger.exception("Unexpected error")
         finally:
             writer.close()
             try:
                 await writer.wait_closed()
             except Exception:
                 pass
-            status = "authenticated" if authenticated else "unauthenticated"
-            logger.info("📱  Phone disconnected (%s)", status)
+            tag = "authenticated" if authenticated else "unauthenticated"
+            logger.info("📱  Disconnected (%s)", tag)
             _log_queue.put(("status", "waiting"))
 
 
 async def run_server() -> None:
     """Start the TCP server."""
     server = await asyncio.start_server(handle_client, host=HOST, port=PORT)
-    logger.info("Server listening on port %d", PORT)
+    logger.info("Listening on port %d", PORT)
     _log_queue.put(("status", "waiting"))
     try:
         async with server:
@@ -171,333 +170,302 @@ async def run_server() -> None:
         await server.wait_closed()
 
 
-def _server_thread_target() -> None:
-    """Entry point for the background server thread."""
+def _server_thread() -> None:
+    """Background thread entry."""
     import warnings
     warnings.filterwarnings("ignore", category=ResourceWarning)
     try:
         asyncio.run(run_server())
     except Exception:
-        logger.exception("Server thread crashed")
+        logger.exception("Server crashed")
 
 
 # ═══════════════════════════════════════════════
-#  GUI — Premium Dark Theme
+#  GUI — Stitch-designed premium dark theme
 # ═══════════════════════════════════════════════
 
-# Color palette (matches landing page)
-C_BG = "#050505"
-C_SURFACE = "#0c0c0c"
-C_CARD = "#111113"
-C_BORDER = "#1e1e22"
-C_TEXT = "#f0f0f0"
-C_MUTED = "#707078"
-C_ACCENT = "#7c5ce7"
-C_ACCENT_GLOW = "#9b7dff"
-C_GREEN = "#34d399"
-C_YELLOW = "#fbbf24"
-C_RED = "#f87171"
+# Color tokens (from Stitch: #7b5ae7 purple, dark mode, Inter, round-4)
+BG = "#000000"
+SURFACE_1 = "#0a0a0c"
+SURFACE_2 = "#111114"
+SURFACE_3 = "#18181c"
+BORDER = "#1f1f24"
+BORDER_HOVER = "#2a2a30"
+TEXT = "#f5f5f7"
+TEXT_SECONDARY = "#a1a1a8"
+TEXT_MUTED = "#6b6b74"
+ACCENT = "#7b5ae7"
+ACCENT_HOVER = "#9478f0"
+ACCENT_DIM = "#4a3590"
+GREEN = "#34d399"
+YELLOW = "#fbbf24"
+RED = "#f87171"
 
-F_BRAND = ("Segoe UI", 32, "bold")
-F_TAGLINE = ("Segoe UI", 10)
-F_LABEL = ("Segoe UI", 9)
-F_VALUE = ("Segoe UI", 11)
-F_PIN = ("Consolas", 22, "bold")
-F_MONO = ("Consolas", 9)
-F_BTN = ("Segoe UI", 9, "bold")
-F_STATUS = ("Segoe UI", 10)
+RADIUS = 8  # round-4 from Stitch
 
 
 class VexraApp:
-    """Premium dark GUI for the Vexra receiver."""
+    """Premium windowed receiver matching Stitch design."""
 
     def __init__(self) -> None:
         self.root = tk.Tk()
         self.root.title("Vexra")
-        self.root.configure(bg=C_BG)
+        self.root.configure(bg=BG)
         self.root.resizable(False, False)
 
-        # Window size and center
-        w, h = 460, 620
+        w, h = 480, 640
         sx = self.root.winfo_screenwidth()
         sy = self.root.winfo_screenheight()
         self.root.geometry(f"{w}x{h}+{(sx - w) // 2}+{(sy - h) // 2}")
 
-        # Set window icon
-        ico_path = resource_path("vexra.ico")
-        if os.path.isfile(ico_path):
+        ico = resource_path("vexra.ico")
+        if os.path.isfile(ico):
             try:
-                self.root.iconbitmap(ico_path)
+                self.root.iconbitmap(ico)
             except Exception:
                 pass
 
-        self._build_ui()
-        self._poll_queue()
+        self._build()
+        self._poll()
 
-    # ────────────────────────────────────────────
-    #  UI Construction
-    # ────────────────────────────────────────────
+    # ── Layout ──
 
-    def _build_ui(self) -> None:
-        """Build the entire premium layout."""
+    def _build(self) -> None:
+        r = self.root
 
-        # ── Glow canvas (top accent) ──
-        glow = tk.Canvas(
-            self.root, width=460, height=3, bg=C_BG,
-            highlightthickness=0, bd=0,
-        )
-        glow.pack(fill="x")
-        glow.create_rectangle(60, 0, 400, 3, fill=C_ACCENT, outline="")
+        # ── Top accent gradient bar ──
+        top_bar = tk.Canvas(r, width=480, height=3, bg=BG, highlightthickness=0)
+        top_bar.pack(fill="x")
+        # Simulate gradient: purple center, fading edges
+        top_bar.create_rectangle(0, 0, 480, 3, fill="#0d0d12", outline="")
+        top_bar.create_rectangle(40, 0, 440, 3, fill=ACCENT_DIM, outline="")
+        top_bar.create_rectangle(100, 0, 380, 3, fill=ACCENT, outline="")
 
-        # ── Header ──
-        header = tk.Frame(self.root, bg=C_BG)
-        header.pack(fill="x", pady=(32, 0))
+        # ── Header section ──
+        hdr = tk.Frame(r, bg=BG)
+        hdr.pack(fill="x", pady=(36, 0))
 
         tk.Label(
-            header, text="V E X R A", font=F_BRAND,
-            fg=C_TEXT, bg=C_BG,
+            hdr, text="V E X R A",
+            font=("Segoe UI", 28, "bold"),
+            fg=TEXT, bg=BG,
         ).pack()
 
         tk.Label(
-            header, text="Your phone. Your trackpad. No wires.",
-            font=F_TAGLINE, fg=C_MUTED, bg=C_BG,
+            hdr, text="Your phone. Your trackpad. No wires.",
+            font=("Segoe UI", 10), fg=TEXT_MUTED, bg=BG,
         ).pack(pady=(6, 0))
 
         # ── Status pill ──
-        status_frame = tk.Frame(self.root, bg=C_BG)
-        status_frame.pack(pady=(20, 0))
+        pill_wrap = tk.Frame(r, bg=BG)
+        pill_wrap.pack(pady=(20, 0))
 
-        self.status_pill = tk.Frame(
-            status_frame, bg=C_CARD,
-            highlightbackground=C_BORDER,
-            highlightthickness=1,
-            padx=16, pady=6,
+        pill = tk.Frame(
+            pill_wrap, bg=SURFACE_2,
+            highlightbackground=BORDER, highlightthickness=1,
+            padx=14, pady=5,
         )
-        self.status_pill.pack()
+        pill.pack()
 
-        self.status_dot = tk.Label(
-            self.status_pill, text="●", font=("Segoe UI", 8),
-            fg=C_YELLOW, bg=C_CARD,
+        self._status_dot = tk.Label(
+            pill, text="●", font=("Segoe UI", 9), fg=YELLOW, bg=SURFACE_2,
         )
-        self.status_dot.pack(side="left")
+        self._status_dot.pack(side="left")
 
-        self.status_label = tk.Label(
-            self.status_pill, text="  Starting...",
-            font=F_STATUS, fg=C_MUTED, bg=C_CARD,
+        self._status_text = tk.Label(
+            pill, text="  Starting…",
+            font=("Segoe UI", 10), fg=TEXT_SECONDARY, bg=SURFACE_2,
         )
-        self.status_label.pack(side="left")
+        self._status_text.pack(side="left")
 
         # ── Connection card ──
         card = tk.Frame(
-            self.root, bg=C_CARD,
-            highlightbackground=C_BORDER,
-            highlightthickness=1,
+            r, bg=SURFACE_2,
+            highlightbackground=BORDER, highlightthickness=1,
         )
-        card.pack(fill="x", padx=24, pady=(20, 0))
+        card.pack(fill="x", padx=28, pady=(20, 0))
 
-        # IP section
-        ip_section = tk.Frame(card, bg=C_CARD, pady=16, padx=20)
-        ip_section.pack(fill="x")
+        # -- Top half: IP + Port --
+        top_half = tk.Frame(card, bg=SURFACE_2, padx=20, pady=16)
+        top_half.pack(fill="x")
 
-        ip_left = tk.Frame(ip_section, bg=C_CARD)
-        ip_left.pack(side="left")
+        left = tk.Frame(top_half, bg=SURFACE_2)
+        left.pack(side="left", anchor="nw")
 
         tk.Label(
-            ip_left, text="IP ADDRESS", font=F_LABEL,
-            fg=C_MUTED, bg=C_CARD, anchor="w",
+            left, text="IP ADDRESS",
+            font=("Segoe UI", 8, "bold"), fg=TEXT_MUTED, bg=SURFACE_2,
         ).pack(anchor="w")
 
-        local_ips = get_local_ips()
-        ip_text = local_ips[0] if local_ips else "No network"
+        ips = get_local_ips()
+        ip = ips[0] if ips else "No network"
         tk.Label(
-            ip_left, text=ip_text, font=F_VALUE,
-            fg=C_TEXT, bg=C_CARD, anchor="w",
-        ).pack(anchor="w", pady=(2, 0))
+            left, text=ip,
+            font=("Segoe UI", 13), fg=TEXT, bg=SURFACE_2,
+        ).pack(anchor="w", pady=(4, 0))
 
-        ip_right = tk.Frame(ip_section, bg=C_CARD)
-        ip_right.pack(side="right")
+        right = tk.Frame(top_half, bg=SURFACE_2)
+        right.pack(side="right", anchor="ne")
 
         tk.Label(
-            ip_right, text="PORT", font=F_LABEL,
-            fg=C_MUTED, bg=C_CARD, anchor="e",
+            right, text="PORT",
+            font=("Segoe UI", 8, "bold"), fg=TEXT_MUTED, bg=SURFACE_2,
         ).pack(anchor="e")
 
         tk.Label(
-            ip_right, text=str(PORT), font=F_VALUE,
-            fg=C_TEXT, bg=C_CARD, anchor="e",
-        ).pack(anchor="e", pady=(2, 0))
+            right, text=str(PORT),
+            font=("Segoe UI", 13), fg=TEXT, bg=SURFACE_2,
+        ).pack(anchor="e", pady=(4, 0))
 
-        # Divider inside card
-        tk.Frame(card, bg=C_BORDER, height=1).pack(fill="x", padx=20)
+        # -- Divider --
+        tk.Frame(card, bg=BORDER, height=1).pack(fill="x", padx=20)
 
-        # PIN section
-        pin_section = tk.Frame(card, bg=C_CARD, pady=16, padx=20)
-        pin_section.pack(fill="x")
+        # -- Bottom half: PIN --
+        bot_half = tk.Frame(card, bg=SURFACE_2, padx=20, pady=16)
+        bot_half.pack(fill="x")
 
         tk.Label(
-            pin_section, text="CONNECTION PIN", font=F_LABEL,
-            fg=C_MUTED, bg=C_CARD, anchor="w",
+            bot_half, text="CONNECTION PIN",
+            font=("Segoe UI", 8, "bold"), fg=TEXT_MUTED, bg=SURFACE_2,
         ).pack(anchor="w")
 
-        pin_row = tk.Frame(pin_section, bg=C_CARD)
-        pin_row.pack(fill="x", pady=(4, 0))
+        pin_row = tk.Frame(bot_half, bg=SURFACE_2)
+        pin_row.pack(fill="x", pady=(6, 0))
 
-        self.pin_label = tk.Label(
-            pin_row, text=self._format_pin(AUTH_PIN),
-            font=F_PIN, fg=C_ACCENT_GLOW, bg=C_CARD,
+        self._pin = tk.Label(
+            pin_row, text=self._fmt_pin(AUTH_PIN),
+            font=("Consolas", 26, "bold"), fg=ACCENT, bg=SURFACE_2,
         )
-        self.pin_label.pack(side="left")
+        self._pin.pack(side="left")
 
-        # New PIN button inline
-        self.new_pin_btn = tk.Label(
-            pin_row, text="↻ Regenerate", font=F_LABEL,
-            fg=C_ACCENT, bg=C_CARD, cursor="hand2",
+        regen = tk.Label(
+            pin_row, text="↻  Regenerate",
+            font=("Segoe UI", 9), fg=TEXT_MUTED, bg=SURFACE_2, cursor="hand2",
         )
-        self.new_pin_btn.pack(side="right", pady=(8, 0))
-        self.new_pin_btn.bind("<Button-1>", lambda e: self._regenerate_pin())
-        self.new_pin_btn.bind("<Enter>", lambda e: self.new_pin_btn.configure(fg=C_ACCENT_GLOW))
-        self.new_pin_btn.bind("<Leave>", lambda e: self.new_pin_btn.configure(fg=C_ACCENT))
+        regen.pack(side="right", pady=(10, 0))
+        regen.bind("<Button-1>", lambda e: self._new_pin())
+        regen.bind("<Enter>", lambda e: regen.configure(fg=ACCENT_HOVER))
+        regen.bind("<Leave>", lambda e: regen.configure(fg=TEXT_MUTED))
 
-        # ── Log area ──
-        log_outer = tk.Frame(self.root, bg=C_BG)
-        log_outer.pack(fill="both", expand=True, padx=24, pady=(16, 0))
+        # ── Activity log ──
+        log_wrap = tk.Frame(r, bg=BG)
+        log_wrap.pack(fill="both", expand=True, padx=28, pady=(16, 0))
 
         tk.Label(
-            log_outer, text="ACTIVITY", font=F_LABEL,
-            fg=C_MUTED, bg=C_BG, anchor="w",
-        ).pack(fill="x", pady=(0, 6))
+            log_wrap, text="ACTIVITY",
+            font=("Segoe UI", 8, "bold"), fg=TEXT_MUTED, bg=BG,
+        ).pack(anchor="w", pady=(0, 6))
 
-        log_container = tk.Frame(
-            log_outer, bg=C_SURFACE,
-            highlightbackground=C_BORDER,
-            highlightthickness=1,
+        log_border = tk.Frame(
+            log_wrap, bg=SURFACE_1,
+            highlightbackground=BORDER, highlightthickness=1,
         )
-        log_container.pack(fill="both", expand=True)
+        log_border.pack(fill="both", expand=True)
 
-        self.log_text = tk.Text(
-            log_container, bg=C_SURFACE, fg=C_MUTED,
-            font=F_MONO, relief="flat", bd=0,
-            padx=12, pady=10, wrap="word",
+        self._log = tk.Text(
+            log_border, bg=SURFACE_1, fg=TEXT_MUTED,
+            font=("Consolas", 9), relief="flat", bd=0,
+            padx=14, pady=12, wrap="word",
             state="disabled", cursor="arrow",
-            insertbackground=C_MUTED,
-            selectbackground=C_ACCENT,
+            insertbackground=TEXT_MUTED, selectbackground=ACCENT_DIM,
             highlightthickness=0,
         )
-        self.log_text.pack(fill="both", expand=True)
+        self._log.pack(fill="both", expand=True)
 
-        self.log_text.tag_configure("success", foreground=C_GREEN)
-        self.log_text.tag_configure("warning", foreground=C_YELLOW)
-        self.log_text.tag_configure("error", foreground=C_RED)
-        self.log_text.tag_configure("info", foreground=C_MUTED)
+        self._log.tag_configure("ok", foreground=GREEN)
+        self._log.tag_configure("warn", foreground=YELLOW)
+        self._log.tag_configure("err", foreground=RED)
+        self._log.tag_configure("dim", foreground=TEXT_MUTED)
 
         # ── Bottom bar ──
-        bottom = tk.Frame(self.root, bg=C_BG, pady=14, padx=24)
-        bottom.pack(fill="x")
+        foot = tk.Frame(r, bg=BG, padx=28, pady=12)
+        foot.pack(fill="x")
 
-        # Quit button (bottom right)
-        self.quit_btn = tk.Label(
-            bottom, text="✕  Quit", font=F_BTN,
-            fg=C_MUTED, bg=C_BG, cursor="hand2",
-        )
-        self.quit_btn.pack(side="right")
-        self.quit_btn.bind("<Button-1>", lambda e: self._on_quit())
-        self.quit_btn.bind("<Enter>", lambda e: self.quit_btn.configure(fg=C_RED))
-        self.quit_btn.bind("<Leave>", lambda e: self.quit_btn.configure(fg=C_MUTED))
-
-        # Version label (bottom left)
         tk.Label(
-            bottom, text="v1.0.0", font=F_LABEL,
-            fg="#333338", bg=C_BG,
+            foot, text="v1.0.0",
+            font=("Segoe UI", 8), fg="#2a2a30", bg=BG,
         ).pack(side="left")
 
-        # ── Bottom accent line ──
-        glow_b = tk.Canvas(
-            self.root, width=460, height=2, bg=C_BG,
-            highlightthickness=0, bd=0,
+        quit_lbl = tk.Label(
+            foot, text="✕  Quit",
+            font=("Segoe UI", 9, "bold"), fg=TEXT_MUTED, bg=BG, cursor="hand2",
         )
-        glow_b.pack(fill="x", side="bottom")
-        glow_b.create_rectangle(80, 0, 380, 2, fill=C_ACCENT, outline="")
+        quit_lbl.pack(side="right")
+        quit_lbl.bind("<Button-1>", lambda e: self.root.destroy())
+        quit_lbl.bind("<Enter>", lambda e: quit_lbl.configure(fg=RED))
+        quit_lbl.bind("<Leave>", lambda e: quit_lbl.configure(fg=TEXT_MUTED))
 
-    # ────────────────────────────────────────────
-    #  Helpers
-    # ────────────────────────────────────────────
+        # ── Bottom accent gradient bar ──
+        bot_bar = tk.Canvas(r, width=480, height=2, bg=BG, highlightthickness=0)
+        bot_bar.pack(fill="x", side="bottom")
+        bot_bar.create_rectangle(0, 0, 480, 2, fill="#0d0d12", outline="")
+        bot_bar.create_rectangle(60, 0, 420, 2, fill=ACCENT_DIM, outline="")
+        bot_bar.create_rectangle(140, 0, 340, 2, fill=ACCENT, outline="")
+
+    # ── Helpers ──
 
     @staticmethod
-    def _format_pin(pin: str) -> str:
-        """Format PIN with spacing for readability: '482910' → '482  910'."""
-        return f"{pin[:3]}  {pin[3:]}"
+    def _fmt_pin(pin: str) -> str:
+        return f"{pin[:3]}   {pin[3:]}"
 
-    def _append_log(self, message: str) -> None:
-        """Add a line to the log with color tagging."""
-        self.log_text.configure(state="normal")
+    def _log_msg(self, msg: str) -> None:
+        self._log.configure(state="normal")
+        tag = "dim"
+        if "✅" in msg:
+            tag = "ok"
+        elif "⛔" in msg:
+            tag = "warn"
+        elif "error" in msg.lower() or "crash" in msg.lower():
+            tag = "err"
+        self._log.insert("end", msg + "\n", tag)
+        self._log.see("end")
+        self._log.configure(state="disabled")
 
-        tag = "info"
-        if "✅" in message:
-            tag = "success"
-        elif "⛔" in message:
-            tag = "warning"
-        elif "error" in message.lower() or "crashed" in message.lower():
-            tag = "error"
-
-        self.log_text.insert("end", message + "\n", tag)
-        self.log_text.see("end")
-        self.log_text.configure(state="disabled")
-
-    def _update_status(self, status: str) -> None:
-        """Update the status pill."""
-        status_map = {
-            "connected": (C_GREEN, "  Connected"),
-            "waiting": (C_YELLOW, "  Waiting for phone..."),
-            "connecting": (C_YELLOW, "  Authenticating..."),
-            "error": (C_RED, "  Error"),
+    def _set_status(self, s: str) -> None:
+        m = {
+            "connected": (GREEN, "  Connected"),
+            "waiting": (YELLOW, "  Waiting for phone…"),
+            "connecting": (YELLOW, "  Authenticating…"),
+            "error": (RED, "  Error"),
         }
-        color, text = status_map.get(status, (C_MUTED, f"  {status}"))
-        self.status_dot.configure(fg=color)
-        self.status_label.configure(text=text, fg=color if status == "connected" else C_MUTED)
+        color, label = m.get(s, (TEXT_MUTED, f"  {s}"))
+        self._status_dot.configure(fg=color)
+        fg = color if s == "connected" else TEXT_SECONDARY
+        self._status_text.configure(text=label, fg=fg)
 
-    def _regenerate_pin(self) -> None:
-        """Generate a new PIN and update display."""
+    def _new_pin(self) -> None:
         global AUTH_PIN
         AUTH_PIN = f"{secrets.randbelow(1_000_000):06d}"
-        self.pin_label.configure(text=self._format_pin(AUTH_PIN))
+        self._pin.configure(text=self._fmt_pin(AUTH_PIN))
         ts = datetime.now().strftime("%H:%M:%S")
-        self._append_log(f"{ts}  🔄  New PIN generated")
+        self._log_msg(f"{ts}  🔄  New PIN generated")
 
-    def _poll_queue(self) -> None:
-        """Drain the log queue and update GUI."""
+    def _poll(self) -> None:
         while not _log_queue.empty():
             try:
-                msg_type, msg_data = _log_queue.get_nowait()
-                if msg_type == "log":
-                    self._append_log(msg_data)
-                elif msg_type == "status":
-                    self._update_status(msg_data)
+                t, d = _log_queue.get_nowait()
+                if t == "log":
+                    self._log_msg(d)
+                elif t == "status":
+                    self._set_status(d)
             except queue.Empty:
                 break
-        self.root.after(100, self._poll_queue)
-
-    def _on_quit(self) -> None:
-        """Clean shutdown."""
-        self.root.destroy()
+        self.root.after(100, self._poll)
 
     def run(self) -> None:
-        """Start the GUI main loop."""
-        self.root.protocol("WM_DELETE_WINDOW", self._on_quit)
+        self.root.protocol("WM_DELETE_WINDOW", self.root.destroy)
         self.root.mainloop()
 
 
 # ═══════════════════════════════════════════════
-#  Entry point
+#  Entry
 # ═══════════════════════════════════════════════
 
 def main() -> None:
-    """Launch server thread + GUI."""
     import warnings
     warnings.filterwarnings("ignore", category=ResourceWarning)
 
-    server_thread = threading.Thread(target=_server_thread_target, daemon=True)
-    server_thread.start()
-
+    threading.Thread(target=_server_thread, daemon=True).start()
     app = VexraApp()
     app.run()
 
