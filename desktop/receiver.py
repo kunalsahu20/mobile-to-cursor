@@ -1,7 +1,7 @@
 """
 Vexra — Desktop Receiver (GUI)
 
-Premium windowed TCP server with Stitch-designed UI + glow orb effects.
+Premium windowed TCP server with animated glow orb effects.
 Consistent dark aesthetic matching the Vexra landing page.
 Runs asyncio in a background thread, updates tkinter via queue.
 """
@@ -167,11 +167,10 @@ def _server_thread() -> None:
 
 
 # ═══════════════════════════════════════════════
-#  Design tokens (Stitch: #7b5ae7, dark, Inter)
+#  Design tokens
 # ═══════════════════════════════════════════════
 
 BG = "#000000"
-SURFACE_1 = "#0a0a0c"
 SURFACE_2 = "#111114"
 BORDER = "#1f1f24"
 TEXT = "#f5f5f7"
@@ -187,24 +186,20 @@ RED = "#f87171"
 W, H = 480, 660
 
 
-# ── Glow orb helper ───────────────────────────
-
-def _draw_glow(canvas: tk.Canvas, cx: int, cy: int, r: int,
-               color_rgb: tuple, layers: int = 12) -> list:
-    """Draw soft radial glow using concentric ovals with decreasing opacity."""
+def _draw_glow(canvas, cx, cy, r, rgb, layers=14):
+    """Draw soft radial glow using concentric ovals."""
     items = []
-    base_r, base_g, base_b = color_rgb
+    br, bg_c, bb = rgb
     for i in range(layers, 0, -1):
         frac = i / layers
-        radius = int(r * frac)
-        # Blend toward black (#000) as we go outward
-        blend = frac ** 0.5
-        cr = int(base_r * blend)
-        cg = int(base_g * blend)
-        cb = int(base_b * blend)
+        rad = int(r * frac)
+        blend = frac ** 0.6
+        cr = min(255, int(br * blend))
+        cg = min(255, int(bg_c * blend))
+        cb = min(255, int(bb * blend))
         color = f"#{cr:02x}{cg:02x}{cb:02x}"
         item = canvas.create_oval(
-            cx - radius, cy - radius, cx + radius, cy + radius,
+            cx - rad, cy - rad, cx + rad, cy + rad,
             fill=color, outline="",
         )
         items.append(item)
@@ -212,7 +207,7 @@ def _draw_glow(canvas: tk.Canvas, cx: int, cy: int, r: int,
 
 
 class VexraApp:
-    """Premium receiver with landing-page glow effects."""
+    """Premium receiver with animated glow effects."""
 
     def __init__(self) -> None:
         self.root = tk.Tk()
@@ -231,97 +226,56 @@ class VexraApp:
             except Exception:
                 pass
 
-        self._anim_step = 0
-        self._glow_items = []
+        self._step = 0
+        self._orbs = []
         self._build()
         self._poll()
-        self._animate_glow()
+        self._animate()
 
     def _build(self) -> None:
-        # ── Background canvas with glow orbs ──
-        self._bg_canvas = tk.Canvas(
-            self.root, width=W, height=H,
-            bg=BG, highlightthickness=0, bd=0,
-        )
-        self._bg_canvas.place(x=0, y=0, width=W, height=H)
+        # ── Full-window canvas (everything drawn/placed on this) ──
+        c = tk.Canvas(self.root, width=W, height=H, bg=BG, highlightthickness=0)
+        c.pack(fill="both", expand=True)
+        self._cv = c
 
-        # Draw glow orbs (matching landing page positions)
-        # Top-right: purple glow
-        self._glow_tr = _draw_glow(
-            self._bg_canvas, 420, 60, 220, (123, 90, 231), 15
-        )
-        # Bottom-left: pink/purple glow
-        self._glow_bl = _draw_glow(
-            self._bg_canvas, 40, 580, 200, (180, 60, 180), 12
-        )
-        # Center: subtle blue glow
-        self._glow_c = _draw_glow(
-            self._bg_canvas, 240, 320, 280, (60, 50, 140), 10
-        )
+        # ── Glow orbs (drawn first, behind everything) ──
+        g1 = _draw_glow(c, 400, 50, 250, (100, 60, 200), 16)
+        g2 = _draw_glow(c, 60, 600, 220, (160, 40, 160), 14)
+        g3 = _draw_glow(c, 240, 330, 300, (50, 40, 120), 12)
 
-        self._glow_items = [
-            (self._glow_tr, 420, 60, 220, (123, 90, 231), 15),
-            (self._glow_bl, 40, 580, 200, (180, 60, 180), 12),
-            (self._glow_c, 240, 320, 280, (60, 50, 140), 10),
+        self._orbs = [
+            (g1, 400, 50, 250, (100, 60, 200), 16),
+            (g2, 60, 600, 220, (160, 40, 160), 14),
+            (g3, 240, 330, 300, (50, 40, 120), 12),
         ]
 
         # ── Top accent bar ──
-        self._bg_canvas.create_rectangle(0, 0, W, 3, fill="#080810", outline="")
-        self._bg_canvas.create_rectangle(40, 0, 440, 3, fill=ACCENT_D, outline="")
-        self._bg_canvas.create_rectangle(120, 0, 360, 3, fill=ACCENT, outline="")
+        c.create_rectangle(0, 0, W, 3, fill="#0a0a14", outline="")
+        c.create_rectangle(40, 0, 440, 3, fill=ACCENT_D, outline="")
+        c.create_rectangle(120, 0, 360, 3, fill=ACCENT, outline="")
 
-        # ── Main UI container (sits on top of canvas) ──
-        main = tk.Frame(self.root, bg="")
-        main.place(x=0, y=0, width=W, height=H)
-        # Make frame transparent-ish by matching BG
-        main.configure(bg=BG)
-
-        # We use a simple approach: transparent-bg labels/frames on top
-        # Since tkinter doesn't support true transparency, we use BG color
-        # The glow effect shows through the dark background
-
-        # ── Header ──
-        hdr = tk.Frame(main, bg=BG)
-        hdr.pack(fill="x", pady=(36, 0))
-
-        tk.Label(
-            hdr, text="V E X R A",
-            font=("Segoe UI", 28, "bold"), fg=TEXT, bg=BG,
-        ).pack()
-
-        tk.Label(
-            hdr, text="Your phone. Your trackpad. No wires.",
-            font=("Segoe UI", 10), fg=TEXT_MUT, bg=BG,
-        ).pack(pady=(6, 0))
+        # ── Header (placed on canvas) ──
+        hdr = tk.Frame(c, bg=BG)
+        tk.Label(hdr, text="V E X R A", font=("Segoe UI", 28, "bold"),
+                 fg=TEXT, bg=BG).pack()
+        tk.Label(hdr, text="Your phone. Your trackpad. No wires.",
+                 font=("Segoe UI", 10), fg=TEXT_MUT, bg=BG).pack(pady=(6, 0))
+        c.create_window(W // 2, 72, window=hdr, anchor="n")
 
         # ── Status pill ──
-        pw = tk.Frame(main, bg=BG)
-        pw.pack(pady=(20, 0))
-
-        pill = tk.Frame(
-            pw, bg=SURFACE_2,
-            highlightbackground=BORDER, highlightthickness=1,
-            padx=14, pady=5,
-        )
-        pill.pack()
-
-        self._sdot = tk.Label(
-            pill, text="●", font=("Segoe UI", 9), fg=YELLOW, bg=SURFACE_2,
-        )
+        pill = tk.Frame(c, bg=SURFACE_2, highlightbackground=BORDER,
+                        highlightthickness=1, padx=14, pady=5)
+        self._sdot = tk.Label(pill, text="●", font=("Segoe UI", 9),
+                              fg=YELLOW, bg=SURFACE_2)
         self._sdot.pack(side="left")
-
-        self._stxt = tk.Label(
-            pill, text="  Starting…",
-            font=("Segoe UI", 10), fg=TEXT_SEC, bg=SURFACE_2,
-        )
+        self._stxt = tk.Label(pill, text="  Starting…", font=("Segoe UI", 10),
+                              fg=TEXT_SEC, bg=SURFACE_2)
         self._stxt.pack(side="left")
+        c.create_window(W // 2, 160, window=pill, anchor="n")
 
         # ── Connection card ──
-        card = tk.Frame(
-            main, bg=SURFACE_2,
-            highlightbackground=BORDER, highlightthickness=1,
-        )
-        card.pack(fill="x", padx=28, pady=(20, 0))
+        card = tk.Frame(c, bg=SURFACE_2, highlightbackground=BORDER,
+                        highlightthickness=1)
 
         # Top: IP + Port
         top = tk.Frame(card, bg=SURFACE_2, padx=20, pady=16)
@@ -343,7 +297,6 @@ class VexraApp:
         tk.Label(rf, text=str(PORT), font=("Segoe UI", 13),
                  fg=TEXT, bg=SURFACE_2).pack(anchor="e", pady=(4, 0))
 
-        # Divider
         tk.Frame(card, bg=BORDER, height=1).pack(fill="x", padx=20)
 
         # Bottom: PIN
@@ -355,36 +308,30 @@ class VexraApp:
         pr = tk.Frame(bot, bg=SURFACE_2)
         pr.pack(fill="x", pady=(6, 0))
 
-        self._pin = tk.Label(
-            pr, text=self._fpin(AUTH_PIN),
-            font=("Consolas", 26, "bold"), fg=ACCENT, bg=SURFACE_2,
-        )
+        self._pin = tk.Label(pr, text=self._fpin(AUTH_PIN),
+                             font=("Consolas", 26, "bold"),
+                             fg=ACCENT, bg=SURFACE_2)
         self._pin.pack(side="left")
 
-        regen = tk.Label(
-            pr, text="↻  Regenerate",
-            font=("Segoe UI", 9), fg=TEXT_MUT, bg=SURFACE_2, cursor="hand2",
-        )
+        regen = tk.Label(pr, text="↻  Regenerate", font=("Segoe UI", 9),
+                         fg=TEXT_MUT, bg=SURFACE_2, cursor="hand2")
         regen.pack(side="right", pady=(10, 0))
         regen.bind("<Button-1>", lambda e: self._new_pin())
         regen.bind("<Enter>", lambda e: regen.configure(fg=ACCENT_H))
         regen.bind("<Leave>", lambda e: regen.configure(fg=TEXT_MUT))
 
+        c.create_window(W // 2, 200, window=card, anchor="n", width=W - 56)
+
+        # ── Activity label ──
+        act_lbl = tk.Label(c, text="ACTIVITY", font=("Segoe UI", 8, "bold"),
+                           fg=TEXT_MUT, bg=BG)
+        c.create_window(28, 405, window=act_lbl, anchor="nw")
+
         # ── Activity log ──
-        lw = tk.Frame(main, bg=BG)
-        lw.pack(fill="both", expand=True, padx=28, pady=(16, 0))
-
-        tk.Label(lw, text="ACTIVITY", font=("Segoe UI", 8, "bold"),
-                 fg=TEXT_MUT, bg=BG).pack(anchor="w", pady=(0, 6))
-
-        lb = tk.Frame(
-            lw, bg=SURFACE_1,
-            highlightbackground=BORDER, highlightthickness=1,
-        )
-        lb.pack(fill="both", expand=True)
-
+        log_frame = tk.Frame(c, bg=SURFACE_2, highlightbackground=BORDER,
+                             highlightthickness=1)
         self._log = tk.Text(
-            lb, bg=SURFACE_1, fg=TEXT_MUT,
+            log_frame, bg="#0a0a0c", fg=TEXT_MUT,
             font=("Consolas", 9), relief="flat", bd=0,
             padx=14, pady=12, wrap="word",
             state="disabled", cursor="arrow",
@@ -397,57 +344,46 @@ class VexraApp:
         self._log.tag_configure("err", foreground=RED)
         self._log.tag_configure("dim", foreground=TEXT_MUT)
 
-        # ── Bottom bar ──
-        foot = tk.Frame(main, bg=BG, padx=28, pady=12)
-        foot.pack(fill="x")
+        c.create_window(W // 2, 422, window=log_frame, anchor="n",
+                        width=W - 56, height=170)
 
+        # ── Bottom bar ──
+        foot = tk.Frame(c, bg=BG)
         tk.Label(foot, text="v1.0.0", font=("Segoe UI", 8),
                  fg="#2a2a30", bg=BG).pack(side="left")
-
-        ql = tk.Label(
-            foot, text="✕  Quit", font=("Segoe UI", 9, "bold"),
-            fg=TEXT_MUT, bg=BG, cursor="hand2",
-        )
+        ql = tk.Label(foot, text="✕  Quit", font=("Segoe UI", 9, "bold"),
+                      fg=TEXT_MUT, bg=BG, cursor="hand2")
         ql.pack(side="right")
         ql.bind("<Button-1>", lambda e: self.root.destroy())
         ql.bind("<Enter>", lambda e: ql.configure(fg=RED))
         ql.bind("<Leave>", lambda e: ql.configure(fg=TEXT_MUT))
+        c.create_window(W // 2, 610, window=foot, anchor="n", width=W - 56)
 
         # ── Bottom accent bar ──
-        ba = tk.Canvas(main, width=W, height=2, bg=BG, highlightthickness=0)
-        ba.pack(fill="x", side="bottom")
-        ba.create_rectangle(0, 0, W, 2, fill="#080810", outline="")
-        ba.create_rectangle(60, 0, 420, 2, fill=ACCENT_D, outline="")
-        ba.create_rectangle(160, 0, 320, 2, fill=ACCENT, outline="")
+        c.create_rectangle(0, H - 3, W, H, fill="#0a0a14", outline="")
+        c.create_rectangle(60, H - 3, 420, H, fill=ACCENT_D, outline="")
+        c.create_rectangle(160, H - 3, 320, H, fill=ACCENT, outline="")
 
-    # ── Glow animation ──
+    # ── Animation ──
 
-    def _animate_glow(self) -> None:
-        """Subtle breathing animation for glow orbs."""
-        self._anim_step += 1
-        t = self._anim_step * 0.03  # slow pace
+    def _animate(self) -> None:
+        self._step += 1
+        t = self._step * 0.025
 
-        for items, cx, cy, base_r, color_rgb, layers in self._glow_items:
-            # Gentle scale oscillation: between 0.85 and 1.15
-            scale = 1.0 + 0.15 * math.sin(t + cx * 0.01)
-            br, bg_c, bb = color_rgb
-
+        for items, cx, cy, base_r, rgb, layers in self._orbs:
+            scale = 1.0 + 0.12 * math.sin(t + cx * 0.008)
+            br, bg_c, bb = rgb
             for i, item in enumerate(items):
                 frac = (layers - i) / layers
-                radius = int(base_r * frac * scale)
-                blend = frac ** 0.5
-                cr = max(0, min(255, int(br * blend)))
-                cg = max(0, min(255, int(bg_c * blend)))
-                cb = max(0, min(255, int(bb * blend)))
-                color = f"#{cr:02x}{cg:02x}{cb:02x}"
-                self._bg_canvas.coords(
-                    item,
-                    cx - radius, cy - radius, cx + radius, cy + radius,
-                )
-                self._bg_canvas.itemconfigure(item, fill=color)
+                rad = int(base_r * frac * scale)
+                blend = frac ** 0.6
+                cr = min(255, int(br * blend))
+                cg = min(255, int(bg_c * blend))
+                cb = min(255, int(bb * blend))
+                self._cv.coords(item, cx - rad, cy - rad, cx + rad, cy + rad)
+                self._cv.itemconfigure(item, fill=f"#{cr:02x}{cg:02x}{cb:02x}")
 
-        # 30ms ≈ ~33fps for smooth animation
-        self.root.after(30, self._animate_glow)
+        self.root.after(33, self._animate)
 
     # ── Helpers ──
 
@@ -477,9 +413,8 @@ class VexraApp:
         }
         color, label = m.get(s, (TEXT_MUT, f"  {s}"))
         self._sdot.configure(fg=color)
-        self._stxt.configure(
-            text=label, fg=color if s == "connected" else TEXT_SEC,
-        )
+        self._stxt.configure(text=label,
+                             fg=color if s == "connected" else TEXT_SEC)
 
     def _new_pin(self) -> None:
         global AUTH_PIN
