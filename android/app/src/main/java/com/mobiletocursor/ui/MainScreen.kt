@@ -49,7 +49,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mobiletocursor.network.TcpClient
@@ -234,10 +236,24 @@ private fun ConnectionScreen(
                 Text("IP ADDRESS", color = VexraTextDim, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                 Spacer(Modifier.height(8.dp))
                 OutlinedTextField(
-                    value = host, onValueChange = { host = it },
+                    value = host,
+                    onValueChange = { newValue ->
+                        // Allow only digits and dots
+                        val filtered = newValue.filter { it.isDigit() || it == '.' }
+                        // Auto-insert dot after completed octets (3 digits without a dot following)
+                        val parts = filtered.split(".")
+                        val autoFormatted = if (parts.size < 4) {
+                            val lastPart = parts.lastOrNull() ?: ""
+                            if (lastPart.length == 3 && !filtered.endsWith(".") && parts.size < 4) {
+                                "$filtered."
+                            } else filtered
+                        } else filtered
+                        host = autoFormatted
+                    },
                     placeholder = { Text("192.168.1.100", color = VexraTextDim) },
                     singleLine = true, modifier = Modifier.fillMaxWidth(),
                     colors = fieldColors, shape = RoundedCornerShape(14.dp),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     leadingIcon = { Icon(Icons.Default.Wifi, null, tint = VexraTextDim, modifier = Modifier.size(20.dp)) },
                 )
 
@@ -245,19 +261,25 @@ private fun ConnectionScreen(
                 Text("PORT", color = VexraTextDim, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                 Spacer(Modifier.height(8.dp))
                 OutlinedTextField(
-                    value = port, onValueChange = { port = it },
+                    value = port,
+                    onValueChange = { newValue -> port = newValue.filter { it.isDigit() } },
                     placeholder = { Text("5050", color = VexraTextDim) },
                     singleLine = true, modifier = Modifier.fillMaxWidth(),
                     colors = fieldColors, shape = RoundedCornerShape(14.dp),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     leadingIcon = { Text("<>", color = VexraTextDim, fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 12.dp)) },
                 )
 
                 Spacer(Modifier.height(20.dp))
-                Text("PIN (OPTIONAL)", color = VexraTextDim, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                Text("PIN", color = VexraTextDim, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                 Spacer(Modifier.height(8.dp))
                 OutlinedTextField(
-                    value = pin, onValueChange = { if (it.length <= 6) pin = it },
-                    placeholder = { Text("Enter PIN from desktop", color = VexraTextDim) },
+                    value = pin,
+                    onValueChange = { newValue ->
+                        val digits = newValue.filter { it.isDigit() }
+                        if (digits.length <= 6) pin = digits
+                    },
+                    placeholder = { Text("Enter 6-digit PIN", color = VexraTextDim) },
                     singleLine = true, modifier = Modifier.fillMaxWidth(),
                     colors = if (isAuthFailed) OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = VexraRed, unfocusedBorderColor = VexraRed,
@@ -267,6 +289,7 @@ private fun ConnectionScreen(
                         focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent,
                     ) else fieldColors,
                     shape = RoundedCornerShape(14.dp),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
                     leadingIcon = { Icon(Icons.Default.Lock, null, tint = VexraTextDim, modifier = Modifier.size(20.dp)) },
                 )
                 if (isAuthFailed) {

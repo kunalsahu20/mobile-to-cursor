@@ -93,11 +93,18 @@ vexra/
 │   └── app/src/main/java/com/mobiletocursor/
 │       ├── MainActivity.kt     # Entry point
 │       ├── ui/
-│       │   ├── MainScreen.kt   # Full UI — keyboard, modifiers, shortcuts
-│       │   └── TrackpadView.kt # Multi-touch gesture detection
+│       │   ├── MainScreen.kt   # Connection + control screen UI
+│       │   ├── TrackpadView.kt # Multi-touch gesture detection
+│       │   ├── SettingsScreen.kt # Settings & update checker UI
+│       │   ├── components/
+│       │   │   ├── VexraKeyboardComponents.kt  # Keyboard + mode toggle
+│       │   │   └── VexraGlowBackground.kt      # Ambient glow orbs
+│       │   └── theme/
+│       │       └── Theme.kt    # Color tokens & design system
 │       ├── network/
 │       │   ├── TcpClient.kt    # TCP connection with auto-reconnect
-│       │   └── EventProtocol.kt# JSON event builders
+│       │   ├── EventProtocol.kt# JSON event builders
+│       │   └── UpdateChecker.kt# GitHub release update checker
 │       └── viewmodel/
 │           └── MainViewModel.kt# State management & event dispatch
 │
@@ -119,7 +126,7 @@ Edit `desktop/config.py` to customize:
 ```python
 HOST = "0.0.0.0"         # Listen on all interfaces
 PORT = 5050               # TCP port
-MOUSE_SENSITIVITY = 1.5   # Cursor speed multiplier
+MOUSE_SENSITIVITY = 1.8   # Cursor speed multiplier
 SCROLL_SENSITIVITY = 1.0  # Scroll speed multiplier
 ```
 
