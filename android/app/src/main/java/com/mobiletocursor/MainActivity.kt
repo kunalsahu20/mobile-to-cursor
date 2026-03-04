@@ -44,7 +44,6 @@ class MainActivity : ComponentActivity() {
                     onFourFingerTap = viewModel::onFourFingerTap,
                     onConnect = viewModel::connect,
                     onDisconnect = viewModel::disconnect,
-                    onToggleSettings = viewModel::toggleSettings,
                 )
             }
         }
