@@ -1,4 +1,4 @@
-# Mobile to Cursor
+# Vexra
 
 **Turn your phone into a wireless trackpad & keyboard for your PC.**
 
@@ -35,6 +35,7 @@ A lightweight, open-source remote input system that lets you control your Window
 
 ### Security
 - **PIN authentication** — A random 6-digit PIN is generated each time the receiver starts. You must enter this PIN in the phone app to connect.
+- **Single device limit** — Only one phone can connect at a time.
 - **Local network only** — No internet, no cloud, no data leaves your Wi-Fi.
 - **Auto-reconnect** — Saves last IP/PIN and reconnects on app relaunch.
 
@@ -72,7 +73,7 @@ Switch between **Keyboard** and **Trackpad** modes using the bottom toggle. All 
 ## Project Structure
 
 ```
-mobile-to-cursor/
+vexra/
 ├── desktop/                    # Python TCP receiver
 │   ├── receiver.py             # Main server — accepts connections, validates PIN
 │   ├── protocol.py             # Event type definitions & JSON parsing
@@ -116,6 +117,7 @@ SCROLL_SENSITIVITY = 1.0  # Scroll speed multiplier
 ## Security Notes
 
 - A random 6-digit PIN is generated each time the receiver starts. Only phones with the correct PIN can connect.
+- Only one device can connect at a time. Additional connections are rejected.
 - Communication stays on your local Wi-Fi. Nothing goes to the internet.
 - Data is sent as unencrypted plain TCP. Only use on trusted networks.
 - The desktop receiver stores nothing. The Android app saves the last IP/PIN locally via SharedPreferences.
@@ -130,7 +132,7 @@ Contributions are welcome. Feel free to open issues or submit pull requests.
 
 ## License
 
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
 
 ---
 

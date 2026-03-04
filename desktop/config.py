@@ -1,5 +1,5 @@
 """
-Configuration for the Mobile to Cursor desktop receiver.
+Configuration for the Vexra desktop receiver.
 All tunable settings live here — no magic numbers scattered in code.
 """
 

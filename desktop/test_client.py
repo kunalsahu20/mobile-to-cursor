@@ -42,7 +42,7 @@ def main() -> None:
 
     # ── Test 1: Type some text ──
     print("[Test 1] Typing text...")
-    send_event(sock, {"type": "KEY_INPUT", "text": "Hello from Mobile to Cursor! "})
+    send_event(sock, {"type": "KEY_INPUT", "text": "Hello from Vexra! "})
     time.sleep(0.5)
 
     # ── Test 2: Special keys ──

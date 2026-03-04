@@ -157,7 +157,7 @@ async def run_server() -> None:
 
     print()
     print("=" * 52)
-    print("   Mobile to Cursor — Desktop Receiver")
+    print("   Vexra — Desktop Receiver")
     print("=" * 52)
     print(f"   Listening on port {PORT}")
     print()

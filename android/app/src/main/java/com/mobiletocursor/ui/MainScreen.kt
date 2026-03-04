@@ -229,7 +229,7 @@ private fun TopBar(
             Spacer(Modifier.width(8.dp))
             Text(statusText, color = statusColor, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.weight(1f))
-            Text("Mobile to Cursor", color = MaterialTheme.colorScheme.onSurface, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Text("Vexra", color = MaterialTheme.colorScheme.onSurface, fontSize = 18.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.weight(1f))
             IconButton(onClick = onSettingsClick) {
                 Icon(Icons.Default.Settings, "Settings", tint = MaterialTheme.colorScheme.onSurface)
