@@ -24,15 +24,20 @@ import com.mobiletocursor.ui.theme.VexraBorder
 import com.mobiletocursor.ui.theme.VexraCard
 import com.mobiletocursor.ui.theme.VexraTextDim
 import kotlin.math.abs
-import kotlin.math.sqrt
 
 /**
  * Trackpad gesture surface — glass-morphism design.
  *
  * 1 finger  → cursor move / tap = left click / long press = right click
- * 2 fingers → scroll / pinch = zoom (Ctrl+Scroll) / tap = right click
+ * 2 fingers → scroll / drag (hold left button + move)
  * 3 fingers → swipe gestures / tap = Search (Win key)
- * 4 fingers → swipe up/down = volume / swipe L/R = virtual desktop / tap = notifications
+ * 4 fingers → volume · desktop switch / tap = notifications
+ *
+ * --- 2-finger drag ---
+ * When 2 fingers are placed and one moves significantly in one direction
+ * while the distance between fingers stays roughly constant, we enter
+ * drag mode: left mouse button DOWN → cursor moves → button UP on lift.
+ * If fingers pinch/spread instead, we scroll as before.
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -41,7 +46,8 @@ fun TrackpadSurface(
     onTap: () -> Unit,
     onLongPress: () -> Unit,
     onScroll: (dx: Int, dy: Int) -> Unit,
-    onPinchZoom: (zoomIn: Boolean) -> Unit,
+    onDragStart: () -> Unit,
+    onDragEnd: () -> Unit,
     onTwoFingerTap: () -> Unit,
     onThreeFingerSwipe: (direction: String) -> Unit,
     onThreeFingerTap: () -> Unit,
@@ -63,9 +69,9 @@ fun TrackpadSurface(
     var lastScrollX by remember { mutableFloatStateOf(0f) }
     var lastScrollY by remember { mutableFloatStateOf(0f) }
 
-    // 2-finger pinch tracking
-    var lastPinchDist by remember { mutableFloatStateOf(0f) }
-    var pinchAccumulator by remember { mutableFloatStateOf(0f) }
+    // 2-finger drag state
+    var isDragging by remember { mutableIntStateOf(0) } // 0=no, 1=yes
+    var dragHoldTime by remember { mutableFloatStateOf(0f) }
 
     // Multi-finger total movement (to distinguish taps from swipes)
     var multiTotalMovement by remember { mutableFloatStateOf(0f) }
@@ -91,7 +97,6 @@ fun TrackpadSurface(
                         fingerCount = 1
                         maxFingerCount = 1
                         multiGestureFired = 0
-                        pinchAccumulator = 0f
                         true
                     }
 
@@ -105,8 +110,8 @@ fun TrackpadSurface(
                             2 -> {
                                 lastScrollX = (event.getX(0) + event.getX(1)) / 2f
                                 lastScrollY = (event.getY(0) + event.getY(1)) / 2f
-                                lastPinchDist = fingerDistance(event)
-                                pinchAccumulator = 0f
+                                dragHoldTime = event.eventTime.toFloat()
+                                isDragging = 0
                             }
                             3, 4 -> {
                                 multiStartX = avgX(event)
@@ -163,7 +168,7 @@ fun TrackpadSurface(
                                 }
                             }
 
-                            // 2-finger: scroll + pinch zoom
+                            // 2-finger: scroll OR drag
                             fingerCount == 2 && pointerCount >= 2 -> {
                                 val midX = (event.getX(0) + event.getX(1)) / 2f
                                 val midY = (event.getY(0) + event.getY(1)) / 2f
@@ -171,26 +176,30 @@ fun TrackpadSurface(
                                 val scrollDy = midY - lastScrollY
                                 multiTotalMovement += abs(scrollDx) + abs(scrollDy)
 
-                                if (abs(scrollDx) > 1f || abs(scrollDy) > 1f) {
-                                    onScroll(
-                                        (scrollDx / 5f).toInt(),
-                                        -(scrollDy / 5f).toInt()
-                                    )
-                                    lastScrollX = midX
-                                    lastScrollY = midY
+                                // Drag mode: 2 fingers held > 400ms → left button hold + move
+                                val holdDuration = event.eventTime - dragHoldTime.toLong()
+                                if (holdDuration > 400 && isDragging == 0 && multiTotalMovement > 15f) {
+                                    isDragging = 1
+                                    onDragStart()
                                 }
 
-                                val currentDist = fingerDistance(event)
-                                val pinchDelta = currentDist - lastPinchDist
-                                pinchAccumulator += pinchDelta
-                                lastPinchDist = currentDist
-
-                                val pinchSteps = (pinchAccumulator / 60f).toInt()
-                                if (pinchSteps != 0) {
-                                    repeat(abs(pinchSteps)) {
-                                        onPinchZoom(pinchSteps > 0)
+                                if (isDragging == 1) {
+                                    // Move cursor while dragging (left button is held)
+                                    if (abs(scrollDx) > 0.5f || abs(scrollDy) > 0.5f) {
+                                        onMove(scrollDx.toInt(), scrollDy.toInt())
+                                        lastScrollX = midX
+                                        lastScrollY = midY
                                     }
-                                    pinchAccumulator -= pinchSteps * 60f
+                                } else {
+                                    // Normal 2-finger scroll
+                                    if (abs(scrollDx) > 1f || abs(scrollDy) > 1f) {
+                                        onScroll(
+                                            (scrollDx / 5f).toInt(),
+                                            -(scrollDy / 5f).toInt()
+                                        )
+                                        lastScrollX = midX
+                                        lastScrollY = midY
+                                    }
                                 }
                             }
 
@@ -211,6 +220,11 @@ fun TrackpadSurface(
                     }
 
                     MotionEvent.ACTION_POINTER_UP -> {
+                        // If we were dragging, release mouse button
+                        if (isDragging == 1 && fingerCount == 2) {
+                            onDragEnd()
+                            isDragging = 0
+                        }
                         fingerCount = pointerCount - 1
                         if (fingerCount == 1) {
                             val remaining = if (event.actionIndex == 0) 1 else 0
@@ -221,6 +235,12 @@ fun TrackpadSurface(
                     }
 
                     MotionEvent.ACTION_UP -> {
+                        // Release drag if still active
+                        if (isDragging == 1) {
+                            onDragEnd()
+                            isDragging = 0
+                        }
+
                         val duration = event.eventTime - downTime.toLong()
                         val isTap = duration < 300 && multiGestureFired == 0
 
@@ -247,7 +267,7 @@ fun TrackpadSurface(
         Box(contentAlignment = Alignment.Center) {
             Text(
                 text = "1 finger → cursor · tap → click\n" +
-                    "2 fingers → scroll · pinch → zoom\n" +
+                    "2 fingers → scroll · hold → drag\n" +
                     "3 fingers → swipe gestures\n" +
                     "4 fingers → volume · desktop switch",
                 color = VexraTextDim,
@@ -257,14 +277,6 @@ fun TrackpadSurface(
             )
         }
     }
-}
-
-/** Calculate distance between first two pointers (for pinch). */
-private fun fingerDistance(event: MotionEvent): Float {
-    if (event.pointerCount < 2) return 0f
-    val dx = event.getX(0) - event.getX(1)
-    val dy = event.getY(0) - event.getY(1)
-    return sqrt(dx * dx + dy * dy)
 }
 
 /** Calculate average Y across all pointers. */

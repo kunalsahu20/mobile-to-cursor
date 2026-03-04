@@ -220,9 +220,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      * Pinch zoom — sends a single ZOOM event.
      * Desktop handles Ctrl+Scroll atomically (no timing issues).
      */
-    fun onPinchZoom(zoomIn: Boolean) {
+    /** 2-finger drag start — hold left mouse button. */
+    fun onDragStart() {
         viewModelScope.launch {
-            tcpClient.send(EventProtocol.zoom(if (zoomIn) 3 else -3))
+            tcpClient.send(EventProtocol.mouseClick("left", "down"))
+        }
+    }
+
+    /** 2-finger drag end — release left mouse button. */
+    fun onDragEnd() {
+        viewModelScope.launch {
+            tcpClient.send(EventProtocol.mouseClick("left", "up"))
         }
     }
 
