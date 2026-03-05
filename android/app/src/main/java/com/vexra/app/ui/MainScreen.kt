@@ -238,28 +238,49 @@ private fun ConnectionScreen(
                 OutlinedTextField(
                     value = host,
                     onValueChange = { newValue ->
-                        // Strip everything except digits
-                        val digits = newValue.filter { it.isDigit() }.take(12)
-                        // Auto-format: insert dot after every 3rd digit, max 4 octets
-                        val sb = StringBuilder()
-                        var octet = 0
-                        var count = 0
-                        for (ch in digits) {
-                            if (octet >= 4) break
-                            sb.append(ch)
-                            count++
-                            if (count == 3 && octet < 3) {
-                                sb.append('.')
-                                count = 0
-                                octet++
+                        // Allow digits + dots (dots = explicit octet separator)
+                        val filtered = newValue.filter { it.isDigit() || it == '.' }
+                        // Smart auto-dot: insert dot when octet is full (3 digits)
+                        // or when the next digit would make the octet > 255.
+                        // User-typed dots explicitly seal the current octet.
+                        val octets = mutableListOf<String>()
+                        var current = StringBuilder()
+                        for (ch in filtered) {
+                            if (octets.size >= 4) break
+                            if (ch == '.') {
+                                // User explicitly ends this octet
+                                if (current.isNotEmpty()) {
+                                    octets.add(current.toString())
+                                    current = StringBuilder()
+                                }
+                            } else {
+                                val projected = (current.toString() + ch).toIntOrNull() ?: 0
+                                if (projected > 255) {
+                                    if (current.isNotEmpty()) octets.add(current.toString())
+                                    current = StringBuilder()
+                                    if (octets.size >= 4) break
+                                    current.append(ch)
+                                } else if (current.length == 3) {
+                                    octets.add(current.toString())
+                                    current = StringBuilder()
+                                    if (octets.size >= 4) break
+                                    current.append(ch)
+                                } else {
+                                    current.append(ch)
+                                }
                             }
                         }
-                        host = sb.toString()
+                        if (current.isNotEmpty() && octets.size < 4) {
+                            octets.add(current.toString())
+                        }
+                        // Preserve trailing dot so "10." doesn't snap back to "10"
+                        val trailingDot = filtered.endsWith('.') && current.isEmpty() && octets.size in 1..3
+                        host = octets.joinToString(".") + if (trailingDot) "." else ""
                     },
                     placeholder = { Text("192.168.1.100", color = VexraTextDim) },
                     singleLine = true, modifier = Modifier.fillMaxWidth(),
                     colors = fieldColors, shape = RoundedCornerShape(14.dp),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     leadingIcon = { Icon(Icons.Default.Wifi, null, tint = VexraTextDim, modifier = Modifier.size(20.dp)) },
                 )
 

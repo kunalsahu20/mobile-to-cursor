@@ -1162,8 +1162,8 @@
     <h2 class="download__title">Ready to go wireless?</h2>
     <p class="download__subtitle">Download the Vexra receiver for your desktop and the app for your phone.</p>
     <div class="download__buttons">
-      <a href="https://github.com/kunalsahu20/mobile-to-cursor/releases/latest/download/Vexra.apk"
-        class="btn btn--primary">
+      <a id="dl-apk" href="https://github.com/kunalsahu20/mobile-to-cursor/releases/latest" target="_blank"
+        class="btn btn--primary" style="display:none;">
         <svg class="btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round">
           <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
@@ -1171,8 +1171,9 @@
         </svg>
         Android App (.apk)
       </a>
-      <a href="https://github.com/kunalsahu20/mobile-to-cursor/releases/latest/download/Vexra.exe"
-        class="btn btn--primary" style="background:rgba(120,80,255,0.9);border-color:rgba(120,80,255,0.9);color:#fff;">
+      <a id="dl-exe" href="https://github.com/kunalsahu20/mobile-to-cursor/releases/latest" target="_blank"
+        class="btn btn--primary"
+        style="background:rgba(120,80,255,0.9);border-color:rgba(120,80,255,0.9);color:#fff;display:none;">
         <svg class="btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round">
           <rect x="2" y="3" width="20" height="14" rx="2" />
@@ -1181,8 +1182,8 @@
         </svg>
         Desktop (.exe) — Recommended
       </a>
-      <a href="https://github.com/kunalsahu20/mobile-to-cursor/releases/latest/download/Vexra-Desktop.zip"
-        class="btn btn--outline">
+      <a id="dl-zip" href="https://github.com/kunalsahu20/mobile-to-cursor/releases/latest" target="_blank"
+        class="btn btn--outline" style="display:none;">
         <svg class="btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -1215,30 +1216,87 @@
     </div>
   </footer>
 
-  <!-- Version Badge Script -->
+  <!-- Dynamic Version Badge + Download Links -->
   <script>
-    fetch('https://api.github.com/repos/kunalsahu20/mobile-to-cursor/releases/latest')
-      .then(function (r) { return r.json(); })
-      .then(function (d) {
-        var badge = document.getElementById('version-badge');
-        if (badge && d.tag_name) {
-          badge.textContent = '';
-          var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-          svg.setAttribute('width', '12');
-          svg.setAttribute('height', '12');
-          svg.setAttribute('viewBox', '0 0 24 24');
-          svg.setAttribute('fill', 'currentColor');
-          var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-          path.setAttribute('d', 'M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z');
-          svg.appendChild(path);
-          badge.appendChild(svg);
-          badge.appendChild(document.createTextNode(' ' + d.tag_name));
-        }
-      })
-      .catch(function () {
-        var badge = document.getElementById('version-badge');
-        if (badge) badge.style.display = 'none';
-      });
+    (function () {
+      var API = 'https://api.github.com/repos/kunalsahu20/mobile-to-cursor/releases/latest';
+      var FALLBACK = 'https://github.com/kunalsahu20/mobile-to-cursor/releases/latest';
+
+      // Map: button id → file extension to match
+      var btnMap = { 'dl-apk': '.apk', 'dl-exe': '.exe', 'dl-zip': '.zip' };
+
+      fetch(API)
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          // ── Update version badge ──
+          var badge = document.getElementById('version-badge');
+          if (badge && d.tag_name) {
+            badge.textContent = '';
+            var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('width', '12');
+            svg.setAttribute('height', '12');
+            svg.setAttribute('viewBox', '0 0 24 24');
+            svg.setAttribute('fill', 'currentColor');
+            var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', 'M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z');
+            svg.appendChild(path);
+            badge.appendChild(svg);
+            badge.appendChild(document.createTextNode(' ' + d.tag_name));
+          }
+
+          // ── Update download buttons dynamically ──
+          var assets = d.assets || [];
+          Object.keys(btnMap).forEach(function (btnId) {
+            var ext = btnMap[btnId];
+            var btn = document.getElementById(btnId);
+            if (!btn) return;
+
+            // Find the first asset matching this extension
+            var match = null;
+            for (var i = 0; i < assets.length; i++) {
+              if (assets[i].name.toLowerCase().endsWith(ext)) {
+                match = assets[i];
+                break;
+              }
+            }
+
+            if (match) {
+              btn.href = match.browser_download_url;
+              btn.style.display = '';
+            } else {
+              // Asset not in this release — hide the button
+              btn.style.display = 'none';
+            }
+          });
+
+          // If NO assets matched at all, show a fallback link to releases page
+          var anyVisible = false;
+          Object.keys(btnMap).forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el && el.style.display !== 'none') anyVisible = true;
+          });
+          if (!anyVisible) {
+            var apkBtn = document.getElementById('dl-apk');
+            if (apkBtn) {
+              apkBtn.href = FALLBACK;
+              apkBtn.style.display = '';
+              apkBtn.textContent = 'View All Downloads';
+            }
+          }
+        })
+        .catch(function () {
+          // API failed — show all buttons with fallback to releases page
+          var badge = document.getElementById('version-badge');
+          if (badge) badge.style.display = 'none';
+          Object.keys(btnMap).forEach(function (id) {
+            var btn = document.getElementById(id);
+            if (btn) {
+              btn.href = FALLBACK;
+              btn.style.display = '';
+            }
+          });
+        });
+    })();
   </script>
 
 </body>
