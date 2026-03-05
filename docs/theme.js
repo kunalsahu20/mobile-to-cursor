@@ -14,10 +14,18 @@ function toggleTheme() {
 
 function updateToggleIcons() {
     var isLight = document.documentElement.classList.contains('light');
+
+    // Desktop floating toggle
     var sun = document.getElementById('icon-sun');
     var moon = document.getElementById('icon-moon');
     if (sun) sun.style.display = isLight ? 'none' : 'block';
     if (moon) moon.style.display = isLight ? 'block' : 'none';
+
+    // Mobile nav toggle
+    var navSun = document.getElementById('nav-icon-sun');
+    var navMoon = document.getElementById('nav-icon-moon');
+    if (navSun) navSun.style.display = isLight ? 'none' : 'block';
+    if (navMoon) navMoon.style.display = isLight ? 'block' : 'none';
 }
 
 document.addEventListener('DOMContentLoaded', updateToggleIcons);

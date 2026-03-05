@@ -197,25 +197,6 @@
       color: var(--fg);
     }
 
-    .nav__toggle {
-      display: none;
-      background: none;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--fg);
-      width: 40px;
-      height: 40px;
-      cursor: pointer;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.3rem;
-      transition: border-color 0.2s;
-    }
-
-    .nav__toggle:hover {
-      border-color: rgba(120, 80, 255, 0.5);
-    }
-
     .nav__links {
       display: flex;
       gap: 32px;
@@ -353,6 +334,7 @@
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 24px;
+      margin-bottom: 20px;
     }
 
     .feature-card {
@@ -548,136 +530,270 @@
       color: var(--fg);
     }
 
+    /* ── Hamburger Menu ── */
+    .nav__actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav__hamburger {
+      display: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 6px;
+      color: var(--fg);
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+
+    .nav__hamburger:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .nav__hamburger svg {
+      width: 22px;
+      height: 22px;
+      display: block;
+    }
+
+    /* Theme toggle inline (for mobile nav) — hidden on desktop */
+    .nav__theme-toggle {
+      display: none;
+    }
+
     /* ── Responsive ── */
     @media (max-width: 768px) {
-      .nav__toggle {
+      .container {
+        padding: 0 24px;
+      }
+
+      /* Show hamburger + inline theme toggle */
+      .nav__hamburger {
         display: flex;
+      }
+
+      .nav__theme-toggle {
+        display: flex;
+        background: none;
+        border: 1px solid var(--border);
+        cursor: pointer;
+        padding: 6px;
+        color: var(--fg);
+        border-radius: 8px;
+        width: 36px;
+        height: 36px;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
+      }
+
+      .nav__theme-toggle:hover {
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .nav__theme-toggle svg {
+        width: 18px;
+        height: 18px;
+        display: block;
+      }
+
+      /* Hide the fixed-position floating theme toggle on mobile */
+      .theme-toggle {
+        display: none !important;
+      }
+
+      /* Dropdown nav behind hamburger */
+      .nav {
+        flex-wrap: wrap;
       }
 
       .nav__links {
         display: none;
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
+        width: 100%;
         flex-direction: column;
         gap: 0;
-        background: #0a0a0a;
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        border-radius: 16px;
-        margin-top: 12px;
-        padding: 8px;
-        z-index: 50;
-        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+        padding: 12px 0 4px;
+        order: 3;
       }
 
-      .nav__links.active {
+      .nav__links.open {
         display: flex;
       }
 
-      .nav__links li a {
+      .nav__links li {
+        list-style: none;
+      }
+
+      .nav__links a {
         display: block;
-        padding: 14px 20px;
-        border-radius: 10px;
-        font-size: 1rem;
-        transition: background 0.2s, color 0.2s;
+        padding: 12px 0;
+        font-size: 0.95rem;
+        color: var(--muted);
+        border-top: 1px solid var(--border);
+        transition: color 0.2s;
       }
 
-      .nav__links li a:hover {
-        background: rgba(120, 80, 255, 0.1);
+      .nav__links a:hover {
+        color: var(--fg);
       }
 
-      .features__grid {
-        grid-template-columns: 1fr;
-      }
-
-      .gestures__grid {
-        grid-template-columns: 1fr;
-      }
-
+      /* ── Hero spacing fixes ── */
       .hero {
-        padding: 80px 0 48px;
+        padding: 80px 0 50px;
       }
 
       .hero__title {
+        font-size: clamp(2.5rem, 10vw, 3.5rem);
         letter-spacing: -1.5px;
+        margin-bottom: 16px;
+      }
+
+      .hero__badge {
+        margin-bottom: 28px;
       }
 
       .hero__subtitle {
+        font-size: 1rem;
         margin-bottom: 32px;
       }
 
       .hero__cta {
         flex-direction: column;
-        padding: 0 16px;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 64px;
       }
 
-      .hero__cta .btn {
+      .btn {
         width: 100%;
+        max-width: 280px;
         justify-content: center;
+        padding: 14px 24px;
+      }
+
+      /* ── Section spacing ── */
+      .features {
+        padding: 60px 0 28px;
+      }
+
+      .features__label {
+        margin-bottom: 28px;
+        padding-top: 16px;
+        font-size: 0.75rem;
+      }
+
+      .features__grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
       }
 
       .feature-card {
         padding: 28px 20px;
       }
 
+      .gestures {
+        padding: 80px 0 60px;
+      }
+
+      .gestures__header {
+        margin-bottom: 32px;
+      }
+
+      .gestures__title {
+        font-size: 1.5rem;
+      }
+
+      .gestures__grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
       .gesture-item {
         flex-direction: column;
         align-items: flex-start;
-        gap: 4px;
+        gap: 6px;
+        padding: 16px 18px;
       }
 
       .gesture-item__gesture {
         min-width: auto;
       }
 
+      .how-it-works {
+        padding: 50px 0;
+      }
+
+      .how-it-works__title {
+        font-size: 1.5rem;
+        margin-bottom: 32px;
+      }
+
+      .step-card {
+        padding: 32px 20px;
+      }
+
       .download {
-        padding: 60px 0;
+        padding: 80px 0 60px;
+      }
+
+      .download__title {
+        font-size: clamp(1.5rem, 6vw, 2rem);
+        margin-top: 20px;
+      }
+
+      .download__subtitle {
+        margin-bottom: 28px;
       }
 
       .download__buttons {
         flex-direction: column;
-        padding: 0 16px;
-      }
-
-      .download__buttons .btn {
-        width: 100%;
-        justify-content: center;
+        align-items: center;
+        gap: 12px;
       }
 
       .footer {
         flex-direction: column;
         gap: 16px;
         text-align: center;
+        padding-bottom: 40px;
       }
 
       .footer__links {
         flex-wrap: wrap;
         justify-content: center;
-        gap: 16px;
+        gap: 12px 20px;
       }
 
-      .container {
-        padding: 0 20px;
+      .app-showcase img {
+        max-width: 260px;
       }
 
-      .theme-toggle {
-        bottom: 88px;
+      .version-badge {
+        margin-bottom: 24px;
       }
     }
 
-    /* Light theme mobile nav menu */
-    @media (max-width: 768px) {
-      html.light .nav__links {
-        background: #f0f0f2;
-        border-color: rgba(0, 0, 0, 0.1);
-        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
+    @media (max-width: 400px) {
+      .container {
+        padding: 20px;
+
+      }
+
+      .hero__title {
+        font-size: 2.2rem;
+        letter-spacing: -1px;
+      }
+
+      .nav {
+        padding: 20px 0;
       }
     }
 
     /* ── How it Works ── */
     .how-it-works {
-      padding: 80px 0;
+      padding: 50px 0;
       border-top: 1px solid var(--border);
     }
 
@@ -754,10 +870,7 @@
     @media (max-width: 768px) {
       .steps-grid {
         grid-template-columns: 1fr;
-      }
-
-      .step-card {
-        padding: 28px 20px;
+        margin: 0 20px;
       }
     }
 
@@ -967,6 +1080,8 @@
     html.light .theme-toggle:hover {
       box-shadow: 0 8px 30px rgba(91, 61, 202, 0.15);
     }
+
+    /* Floating toggle hide is now consolidated inside the main mobile @media block above */
   </style>
   <script src="theme.js"></script>
   <!-- JSON-LD: SoftwareApplication -->
@@ -1098,12 +1213,46 @@
   <header class="container">
     <nav class="nav">
       <a href="#" class="nav__brand">Vexra</a>
-      <button class="nav__toggle" onclick="document.querySelector('.nav__links').classList.toggle('active')"
-        aria-label="Menu">☰</button>
-      <ul class="nav__links">
-        <li><a href="#features">Features</a></li>
-        <li><a href="#gestures">Gestures</a></li>
-        <li><a href="#download">Download</a></li>
+      <div class="nav__actions">
+        <!-- Inline Theme Toggle (Mobile Only) -->
+        <button onclick="toggleTheme()" class="nav__theme-toggle" aria-label="Toggle Theme">
+          <svg id="nav-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+          </svg>
+          <svg id="nav-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+        </button>
+
+        <button class="nav__hamburger" onclick="toggleNav()" aria-label="Toggle navigation menu">
+          <svg id="hamburger-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+          <svg id="close-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+
+      <ul class="nav__links" id="navLinks">
+        <li><a href="#features" onclick="closeNav()">Features</a></li>
+        <li><a href="#gestures" onclick="closeNav()">Gestures</a></li>
+        <li><a href="#download" onclick="closeNav()">Download</a></li>
         <li><a href="documentation.html">Docs</a></li>
         <li><a href="https://github.com/kunalsahu20/mobile-to-cursor" target="_blank">GitHub</a></li>
       </ul>
@@ -1310,7 +1459,7 @@
         Desktop (.zip)
       </a>
     </div>
-    <p style="color:var(--muted);font-size:0.8rem;margin-top:20px;">
+    <p style="color:var(--muted);font-size:0.8rem;margin-top:24px;margin-bottom:28px;">
       .zip requires Python installed · .exe may trigger antivirus (false positive) · <a
         href="https://github.com/kunalsahu20/mobile-to-cursor" style="color:var(--fg);" target="_blank">View source on
         GitHub</a>
@@ -1420,6 +1569,30 @@
           });
         });
     })();
+  </script>
+  <!-- Hamburger Nav Toggle -->
+  <script>
+    function toggleNav() {
+      var links = document.getElementById('navLinks');
+      var hamburger = document.getElementById('hamburger-icon');
+      var close = document.getElementById('close-icon');
+      var isOpen = links.classList.contains('open');
+      if (isOpen) {
+        closeNav();
+      } else {
+        links.classList.add('open');
+        hamburger.style.display = 'none';
+        close.style.display = 'block';
+      }
+    }
+    function closeNav() {
+      var links = document.getElementById('navLinks');
+      var hamburger = document.getElementById('hamburger-icon');
+      var close = document.getElementById('close-icon');
+      links.classList.remove('open');
+      hamburger.style.display = 'block';
+      close.style.display = 'none';
+    }
   </script>
 
 </body>
