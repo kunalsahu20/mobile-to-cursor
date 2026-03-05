@@ -4,14 +4,12 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Privacy Policy — Vexra</title>
-    <meta name="description"
-        content="Vexra Privacy Policy. Your data stays on your local network. No cloud, no tracking, no accounts." />
+    <title>404 — Page Not Found | Vexra</title>
+    <meta name="description" content="The page you're looking for doesn't exist. Head back to the Vexra homepage." />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
     <link rel="icon" type="image/png" sizes="192x192" href="favicon.png" />
     <link rel="apple-touch-icon" href="favicon.png" />
-    <link rel="canonical" href="https://vexra.happie.in/privacy.html" />
-    <meta name="robots" content="index, follow" />
+    <meta name="robots" content="noindex" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
@@ -44,6 +42,9 @@
             line-height: 1.7;
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
         body::before {
@@ -82,6 +83,16 @@
             animation: pulse 10s ease-in-out 2s infinite alternate;
         }
 
+        .glow-orb--center {
+            width: 800px;
+            height: 800px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: radial-gradient(circle, rgba(120, 80, 255, 0.06) 0%, transparent 60%);
+            animation: float 12s ease-in-out infinite alternate;
+        }
+
         @keyframes pulse {
             0% {
                 opacity: 0.6;
@@ -94,6 +105,42 @@
             }
         }
 
+        @keyframes float {
+            0% {
+                opacity: 0.4;
+                transform: translate(-50%, -50%) scale(1);
+            }
+
+            100% {
+                opacity: 0.7;
+                transform: translate(-48%, -52%) scale(1.1);
+            }
+        }
+
+        @keyframes glow-text {
+            0% {
+                text-shadow: 0 0 40px rgba(120, 80, 255, 0.3), 0 0 80px rgba(120, 80, 255, 0.15);
+            }
+
+            100% {
+                text-shadow: 0 0 60px rgba(120, 80, 255, 0.5), 0 0 120px rgba(120, 80, 255, 0.25);
+            }
+        }
+
+        @keyframes float-icon {
+            0% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+
+            100% {
+                transform: translateY(0);
+            }
+        }
+
         .container {
             max-width: 800px;
             margin: 0 auto;
@@ -102,12 +149,14 @@
             z-index: 1;
         }
 
+        /* Nav */
         .nav {
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 28px 0;
             border-bottom: 1px solid var(--border);
+            position: relative;
         }
 
         .nav::after {
@@ -165,76 +214,105 @@
             color: var(--fg);
         }
 
-        .legal {
-            padding: 80px 0 60px;
+        /* Error Content */
+        .error-page {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 60px 24px;
         }
 
-        .legal__badge {
-            display: inline-block;
-            padding: 5px 14px;
-            border: 1px solid var(--border);
-            border-radius: 100px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            color: var(--muted);
+        .error-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .error__icon {
+            font-size: 3.5rem;
             margin-bottom: 24px;
-            letter-spacing: 0.5px;
+            animation: float-icon 3s ease-in-out infinite;
         }
 
-        .legal__title {
-            font-size: clamp(2rem, 5vw, 3rem);
-            font-weight: 800;
-            letter-spacing: -1.5px;
-            margin-bottom: 8px;
+        .error__code {
+            font-size: clamp(6rem, 18vw, 10rem);
+            font-weight: 900;
+            letter-spacing: -6px;
+            line-height: 1;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, rgba(120, 80, 255, 0.9), rgba(80, 140, 255, 0.8));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: glow-text 4s ease-in-out infinite alternate;
         }
 
-        .legal__updated {
-            color: var(--muted);
-            font-size: 0.85rem;
-            margin-bottom: 48px;
-        }
-
-        .legal__section {
-            margin-bottom: 40px;
-        }
-
-        .legal__section h2 {
-            font-size: 1.2rem;
+        .error__title {
+            font-size: clamp(1.4rem, 3vw, 1.8rem);
             font-weight: 700;
+            letter-spacing: -0.5px;
             margin-bottom: 12px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid var(--border);
         }
 
-        .legal__section p,
-        .legal__section li {
-            color: #ccc;
+        .error__desc {
+            color: var(--muted);
+            font-size: 1rem;
+            max-width: 420px;
+            margin: 0 auto 36px;
+        }
+
+        .error__actions {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 32px;
+            border-radius: 100px;
+            font-family: inherit;
             font-size: 0.95rem;
-            line-height: 1.8;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.25s ease;
         }
 
-        .legal__section ul {
-            padding-left: 20px;
-            margin-top: 8px;
+        .btn--primary {
+            background: var(--fg);
+            color: var(--bg);
+            border: 1px solid var(--fg);
         }
 
-        .legal__section li {
-            margin-bottom: 6px;
-        }
-
-        .legal__highlight {
-            background: rgba(120, 80, 255, 0.08);
-            border: 1px solid rgba(120, 80, 255, 0.2);
-            border-radius: 12px;
-            padding: 20px 24px;
-            margin: 16px 0;
-        }
-
-        .legal__highlight p {
+        .btn--primary:hover {
+            background: transparent;
             color: var(--fg);
-            font-weight: 500;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
         }
 
+        .btn--outline {
+            background: transparent;
+            color: var(--fg);
+            border: 1px solid var(--border);
+        }
+
+        .btn--outline:hover {
+            border-color: var(--fg);
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.08);
+        }
+
+        .btn__icon {
+            width: 18px;
+            height: 18px;
+            opacity: 0.8;
+        }
+
+        /* Footer */
         .footer {
             padding: 40px 0;
             border-top: 1px solid var(--border);
@@ -272,6 +350,7 @@
             color: var(--fg);
         }
 
+        /* Responsive */
         @media (max-width: 768px) {
             .nav__toggle {
                 display: flex;
@@ -310,6 +389,20 @@
                 background: rgba(120, 80, 255, 0.1);
             }
 
+            .error__code {
+                letter-spacing: -3px;
+            }
+
+            .error__actions {
+                flex-direction: column;
+                padding: 0 16px;
+            }
+
+            .error__actions .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
             .footer {
                 flex-direction: column;
                 text-align: center;
@@ -320,10 +413,6 @@
                 justify-content: center;
                 gap: 16px;
             }
-
-            .legal {
-                padding: 48px 0 40px;
-            }
         }
 
         /* Light theme mobile nav menu */
@@ -331,7 +420,7 @@
             background: rgba(245, 245, 247, 0.95);
         }
 
-        /* ── Light Theme ── */
+        /* Light Theme */
         html.light body {
             background: #f5f5f7;
             color: #0a0a0a;
@@ -358,22 +447,39 @@
             background: radial-gradient(circle, rgba(236, 72, 153, 0.2) 0%, rgba(139, 92, 246, 0.12) 30%, transparent 70%);
         }
 
+        html.light .glow-orb--center {
+            background: radial-gradient(circle, rgba(108, 60, 224, 0.08) 0%, transparent 60%);
+        }
+
         html.light .nav::after {
             background: linear-gradient(90deg, transparent, rgba(108, 60, 224, 0.5), rgba(236, 72, 153, 0.4), transparent);
         }
 
-        html.light .legal__section p,
-        html.light .legal__section li {
-            color: #444;
+        html.light .error__code {
+            background: linear-gradient(135deg, #6c3ce0, #8b5cf6);
+            -webkit-background-clip: text;
+            background-clip: text;
         }
 
-        html.light .legal__highlight {
-            background: rgba(108, 60, 224, 0.06);
-            border-color: rgba(108, 60, 224, 0.15);
+        html.light .btn--primary {
+            background: #0a0a0a;
+            color: #f5f5f7;
+            border-color: #0a0a0a;
         }
 
-        html.light .legal__badge {
-            background: rgba(255, 255, 255, 0.6);
+        html.light .btn--primary:hover {
+            background: linear-gradient(135deg, #6c3ce0, #8b5cf6);
+            border-color: #6c3ce0;
+            color: #fff;
+            box-shadow: 0 8px 30px rgba(108, 60, 224, 0.35);
+            transform: translateY(-2px);
+        }
+
+        html.light .btn--outline:hover {
+            border-color: #6c3ce0;
+            color: #6c3ce0;
+            box-shadow: 0 8px 30px rgba(91, 61, 202, 0.1);
+            transform: translateY(-2px);
         }
 
         html.light .footer__links a:hover {
@@ -417,6 +523,7 @@
 <body>
     <div class="glow-orb glow-orb--top-right"></div>
     <div class="glow-orb glow-orb--bottom-left"></div>
+    <div class="glow-orb glow-orb--center"></div>
 
     <!-- Theme Toggle -->
     <button onclick="toggleTheme()" class="theme-toggle" title="Toggle Theme">
@@ -447,125 +554,39 @@
                 <li><a href="index.html">Home</a></li>
                 <li><a href="documentation.html">Docs</a></li>
                 <li><a href="terms.html">Terms</a></li>
-                <li><a href="privacy.html" style="color:var(--fg);">Privacy</a></li>
+                <li><a href="privacy.html">Privacy</a></li>
             </ul>
         </nav>
     </header>
 
-    <main class="container legal">
-        <span class="legal__badge">Legal</span>
-        <h1 class="legal__title">Privacy Policy</h1>
-        <p class="legal__updated">Last updated: March 5, 2026</p>
-
-        <div class="legal__highlight">
-            <p>🔒 Vexra does not collect, store, or transmit any personal data to external servers. All communication
-                stays on your local network.</p>
+    <main class="error-page">
+        <div class="error-content">
+            <div class="error__icon">🛸</div>
+            <div class="error__code">404</div>
+            <h1 class="error__title">Lost in the signal</h1>
+            <p class="error__desc">The page you're looking for has drifted out of range. Let's get you back on the
+                network.</p>
+            <div class="error__actions">
+                <a href="index.html" class="btn btn--primary">
+                    <svg class="btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                        <polyline points="9 22 9 12 15 12 15 22" />
+                    </svg>
+                    Go Home
+                </a>
+                <a href="documentation.html" class="btn btn--outline">
+                    <svg class="btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                        <line x1="16" y1="13" x2="8" y2="13" />
+                        <line x1="16" y1="17" x2="8" y2="17" />
+                    </svg>
+                    View Docs
+                </a>
+            </div>
         </div>
-
-        <section class="legal__section">
-            <h2>1. Overview</h2>
-            <p>Vexra ("we", "the app") is an open-source application that turns your Android phone into a wireless
-                trackpad and keyboard for your desktop computer. This Privacy Policy explains how Vexra handles your
-                data.</p>
-        </section>
-
-        <section class="legal__section">
-            <h2>2. Data We Collect</h2>
-            <p><strong>We do not collect any personal data.</strong> Specifically:</p>
-            <ul>
-                <li><strong>No accounts required</strong> — Vexra does not require registration, login, or any form of
-                    user account.</li>
-                <li><strong>No analytics or tracking</strong> — We do not use any analytics services, cookies, or
-                    tracking pixels.</li>
-                <li><strong>No cloud storage</strong> — No data is sent to or stored on any external server.</li>
-                <li><strong>No advertising</strong> — Vexra contains no ads and shares no data with advertisers.</li>
-            </ul>
-        </section>
-
-        <section class="legal__section">
-            <h2>3. Data Stored Locally</h2>
-            <p>Vexra stores the following data <strong>exclusively on your device</strong> using Android
-                SharedPreferences:</p>
-            <ul>
-                <li><strong>Connection settings</strong> — IP address, port number, and PIN (for reconnecting)</li>
-                <li><strong>User preferences</strong> — Mouse sensitivity, scroll speed, theme selection</li>
-            </ul>
-            <p>This data never leaves your device and is deleted when you uninstall the app.</p>
-        </section>
-
-        <section class="legal__section">
-            <h2>4. Network Communication</h2>
-            <p>Vexra communicates exclusively over your <strong>local Wi-Fi network</strong> (LAN) using a direct TCP
-                connection between your phone and desktop. This means:</p>
-            <ul>
-                <li>Data travels only between your phone and your computer on the same network.</li>
-                <li>No data is routed through the internet or any third-party server.</li>
-                <li>Touch events (cursor movements, clicks, keystrokes) are sent as protocol commands and are never
-                    logged or stored.</li>
-            </ul>
-        </section>
-
-        <section class="legal__section">
-            <h2>5. Permissions Used</h2>
-            <p>The Android app requests the following permissions:</p>
-            <ul>
-                <li><strong>INTERNET</strong> — Required to establish a TCP connection over your local network (not used
-                    for internet access).</li>
-                <li><strong>ACCESS_NETWORK_STATE</strong> — Used to check if Wi-Fi is available before attempting
-                    connection.</li>
-            </ul>
-            <p>The desktop receiver uses keyboard and mouse input simulation (via the <code>pynput</code> library) to
-                translate touch events into cursor/keyboard actions on your computer.</p>
-        </section>
-
-        <section class="legal__section">
-            <h2>6. PIN Authentication</h2>
-            <p>Vexra supports an optional 6-digit PIN for session authentication. This PIN is:</p>
-            <ul>
-                <li>Set by the user on the desktop receiver.</li>
-                <li>Stored locally on the device for reconnection convenience.</li>
-                <li>Transmitted over the local network during connection handshake only.</li>
-                <li>Never sent to any external service.</li>
-            </ul>
-        </section>
-
-        <section class="legal__section">
-            <h2>7. Third-Party Services</h2>
-            <p>Vexra uses the <strong>GitHub API</strong> solely to check for app updates. This request:</p>
-            <ul>
-                <li>Fetches the latest release version from the public GitHub repository.</li>
-                <li>Does not send any personal or device information.</li>
-                <li>Can be disabled by the user in settings.</li>
-            </ul>
-        </section>
-
-        <section class="legal__section">
-            <h2>8. Children's Privacy</h2>
-            <p>Vexra does not knowingly collect any information from children under 13. Since the app collects no
-                personal data at all, it is inherently compliant with children's privacy regulations.</p>
-        </section>
-
-        <section class="legal__section">
-            <h2>9. Open Source</h2>
-            <p>Vexra is fully open source under the MIT License. You can inspect the complete source code at <a
-                    href="https://github.com/kunalsahu20/mobile-to-cursor" target="_blank"
-                    style="color:var(--accent);">github.com/kunalsahu20/mobile-to-cursor</a> to verify these privacy
-                claims.</p>
-        </section>
-
-        <section class="legal__section">
-            <h2>10. Changes to This Policy</h2>
-            <p>We may update this Privacy Policy from time to time. Any changes will be reflected on this page with an
-                updated "Last updated" date. Continued use of Vexra after changes constitutes acceptance of the revised
-                policy.</p>
-        </section>
-
-        <section class="legal__section">
-            <h2>11. Contact</h2>
-            <p>If you have questions about this Privacy Policy, you can reach us through our <a
-                    href="https://github.com/kunalsahu20/mobile-to-cursor/issues" target="_blank"
-                    style="color:var(--accent);">GitHub Issues</a> page.</p>
-        </section>
     </main>
 
     <footer class="container">

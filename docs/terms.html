@@ -127,6 +127,25 @@
             color: var(--fg);
         }
 
+        .nav__toggle {
+            display: none;
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--fg);
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            transition: border-color 0.2s;
+        }
+
+        .nav__toggle:hover {
+            border-color: rgba(120, 80, 255, 0.5);
+        }
+
         .nav__links {
             display: flex;
             gap: 24px;
@@ -260,14 +279,62 @@
         }
 
         @media (max-width: 768px) {
+            .nav__toggle {
+                display: flex;
+            }
+
             .nav__links {
                 display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                flex-direction: column;
+                gap: 0;
+                background: rgba(0, 0, 0, 0.95);
+                backdrop-filter: blur(20px);
+                border: 1px solid var(--border);
+                border-radius: 16px;
+                margin-top: 12px;
+                padding: 8px;
+                z-index: 50;
+            }
+
+            .nav__links.active {
+                display: flex;
+            }
+
+            .nav__links li a {
+                display: block;
+                padding: 14px 20px;
+                border-radius: 10px;
+                font-size: 1rem;
+                transition: background 0.2s, color 0.2s;
+            }
+
+            .nav__links li a:hover {
+                background: rgba(120, 80, 255, 0.1);
             }
 
             .footer {
                 flex-direction: column;
                 text-align: center;
             }
+
+            .footer__links {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 16px;
+            }
+
+            .legal {
+                padding: 48px 0 40px;
+            }
+        }
+
+        /* Light theme mobile nav menu */
+        html.light .nav__links {
+            background: rgba(245, 245, 247, 0.95);
         }
 
         /* ── Light Theme ── */
@@ -380,6 +447,8 @@
     <header class="container" style="position:relative;">
         <nav class="nav">
             <a href="index.html" class="nav__brand">Vexra</a>
+            <button class="nav__toggle" onclick="document.querySelector('.nav__links').classList.toggle('active')"
+                aria-label="Menu">☰</button>
             <ul class="nav__links">
                 <li><a href="index.html">Home</a></li>
                 <li><a href="documentation.html">Docs</a></li>
