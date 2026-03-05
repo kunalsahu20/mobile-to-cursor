@@ -1219,81 +1219,87 @@
   <!-- Dynamic Version Badge + Download Links -->
   <script>
     (function () {
-      var API = 'https://api.github.com/repos/kunalsahu20/mobile-to-cursor/releases/latest';
+      var API_LATEST = 'https://api.github.com/repos/kunalsahu20/mobile-to-cursor/releases/latest';
+      var API_ALL = 'https://api.github.com/repos/kunalsahu20/mobile-to-cursor/releases?per_page=20';
       var FALLBACK = 'https://github.com/kunalsahu20/mobile-to-cursor/releases/latest';
-
-      // Map: button id → file extension to match
       var btnMap = { 'dl-apk': '.apk', 'dl-exe': '.exe', 'dl-zip': '.zip' };
 
-      fetch(API)
-        .then(function (r) { return r.json(); })
-        .then(function (d) {
-          // ── Update version badge ──
-          var badge = document.getElementById('version-badge');
-          if (badge && d.tag_name) {
-            badge.textContent = '';
-            var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-            svg.setAttribute('width', '12');
-            svg.setAttribute('height', '12');
-            svg.setAttribute('viewBox', '0 0 24 24');
-            svg.setAttribute('fill', 'currentColor');
-            var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-            path.setAttribute('d', 'M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z');
-            svg.appendChild(path);
-            badge.appendChild(svg);
-            badge.appendChild(document.createTextNode(' ' + d.tag_name));
-          }
+      /** Search a list of assets for a file ending with `ext` */
+      function findAsset(assets, ext) {
+        for (var i = 0; i < assets.length; i++) {
+          if (assets[i].name.toLowerCase().endsWith(ext)) return assets[i];
+        }
+        return null;
+      }
 
-          // ── Update download buttons dynamically ──
-          var assets = d.assets || [];
+      /** Show a button with the given download URL */
+      function showBtn(btnId, url) {
+        var btn = document.getElementById(btnId);
+        if (btn) { btn.href = url; btn.style.display = ''; }
+      }
+
+      /** Update the version badge */
+      function setBadge(tagName) {
+        var badge = document.getElementById('version-badge');
+        if (!badge || !tagName) return;
+        badge.textContent = '';
+        var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('width', '12');
+        svg.setAttribute('height', '12');
+        svg.setAttribute('viewBox', '0 0 24 24');
+        svg.setAttribute('fill', 'currentColor');
+        var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', 'M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z');
+        svg.appendChild(path);
+        badge.appendChild(svg);
+        badge.appendChild(document.createTextNode(' ' + tagName));
+      }
+
+      fetch(API_LATEST)
+        .then(function (r) { return r.json(); })
+        .then(function (latest) {
+          setBadge(latest.tag_name);
+
+          var assets = latest.assets || [];
+          var found = {};      // { '.apk': url, '.exe': url, '.zip': url }
+          var missing = [];    // extensions not found in latest release
+
           Object.keys(btnMap).forEach(function (btnId) {
             var ext = btnMap[btnId];
-            var btn = document.getElementById(btnId);
-            if (!btn) return;
-
-            // Find the first asset matching this extension
-            var match = null;
-            for (var i = 0; i < assets.length; i++) {
-              if (assets[i].name.toLowerCase().endsWith(ext)) {
-                match = assets[i];
-                break;
-              }
-            }
-
+            var match = findAsset(assets, ext);
             if (match) {
-              btn.href = match.browser_download_url;
-              btn.style.display = '';
+              found[ext] = { btnId: btnId, url: match.browser_download_url };
+              showBtn(btnId, match.browser_download_url);
             } else {
-              // Asset not in this release — hide the button
-              btn.style.display = 'none';
+              missing.push({ btnId: btnId, ext: ext });
             }
           });
 
-          // If NO assets matched at all, show a fallback link to releases page
-          var anyVisible = false;
-          Object.keys(btnMap).forEach(function (id) {
-            var el = document.getElementById(id);
-            if (el && el.style.display !== 'none') anyVisible = true;
-          });
-          if (!anyVisible) {
-            var apkBtn = document.getElementById('dl-apk');
-            if (apkBtn) {
-              apkBtn.href = FALLBACK;
-              apkBtn.style.display = '';
-              apkBtn.textContent = 'View All Downloads';
-            }
-          }
+          // If all found in latest release, we are done
+          if (missing.length === 0) return;
+
+          // Otherwise, search older releases for missing file types
+          return fetch(API_ALL)
+            .then(function (r) { return r.json(); })
+            .then(function (releases) {
+              if (!Array.isArray(releases)) return;
+              missing.forEach(function (item) {
+                for (var i = 0; i < releases.length; i++) {
+                  var match = findAsset(releases[i].assets || [], item.ext);
+                  if (match) {
+                    showBtn(item.btnId, match.browser_download_url);
+                    break;
+                  }
+                }
+              });
+            });
         })
         .catch(function () {
-          // API failed — show all buttons with fallback to releases page
           var badge = document.getElementById('version-badge');
           if (badge) badge.style.display = 'none';
           Object.keys(btnMap).forEach(function (id) {
             var btn = document.getElementById(id);
-            if (btn) {
-              btn.href = FALLBACK;
-              btn.style.display = '';
-            }
+            if (btn) { btn.href = FALLBACK; btn.style.display = ''; }
           });
         });
     })();
