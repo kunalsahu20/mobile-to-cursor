@@ -291,13 +291,13 @@
                 right: 0;
                 flex-direction: column;
                 gap: 0;
-                background: rgba(0, 0, 0, 0.95);
-                backdrop-filter: blur(20px);
-                border: 1px solid var(--border);
+                background: #0a0a0a;
+                border: 1px solid rgba(255, 255, 255, 0.15);
                 border-radius: 16px;
                 margin-top: 12px;
                 padding: 8px;
                 z-index: 50;
+                box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
             }
 
             .nav__links.active {
@@ -330,11 +330,23 @@
             .legal {
                 padding: 48px 0 40px;
             }
+
+            .container {
+                padding: 0 20px;
+            }
+
+            .theme-toggle {
+                bottom: 88px;
+            }
         }
 
         /* Light theme mobile nav menu */
-        html.light .nav__links {
-            background: rgba(245, 245, 247, 0.95);
+        @media (max-width: 768px) {
+            html.light .nav__links {
+                background: #f0f0f2;
+                border-color: rgba(0, 0, 0, 0.1);
+                box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
+            }
         }
 
         /* ── Light Theme ── */
