@@ -45,7 +45,7 @@ class UpdateChecker(private val context: Context) {
     companion object {
         private const val GITHUB_API =
             "https://api.github.com/repos/kunalsahu20/mobile-to-cursor/releases/latest"
-        const val CURRENT_VERSION = "1.0.7"
+        const val CURRENT_VERSION = "1.0.8"
     }
 
     /**
