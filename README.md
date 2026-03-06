@@ -1,6 +1,6 @@
 # Vexra
 
-🌐 **Website:** [vexra.happie.in](https://vexra.happie.in) · 📱 **Download:** [Latest Release](https://github.com/kunalsahu20/mobile-to-cursor/releases/latest) · 📖 **Docs:** [Documentation](https://vexra.happie.in/documentation.html)
+**Website:** [vexra.happie.in](https://vexra.happie.in) · **Download:** [Latest Release](https://github.com/kunalsahu20/mobile-to-cursor/releases/latest) · **Docs:** [Documentation](https://vexra.happie.in/documentation.html)
 
 **Turn your phone into a wireless trackpad & keyboard for your PC.**
 
@@ -161,7 +161,7 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 ---
 
 <p align="center">
-  <a href="https://vexra.happie.in">🌐 Website</a> · <a href="https://vexra.happie.in/documentation.html">📖 Docs</a> · <a href="https://github.com/kunalsahu20/mobile-to-cursor/releases/latest">📱 Download</a> · <a href="https://discord.gg/TVFkDKVxR6">💬 Discord</a>
+  <a href="https://vexra.happie.in">Website</a> · <a href="https://vexra.happie.in/documentation.html">Docs</a> · <a href="https://github.com/kunalsahu20/mobile-to-cursor/releases/latest">Download</a> · <a href="https://discord.gg/TVFkDKVxR6">Discord</a>
 </p>
 <p align="center">
   Made with ❤️ by <a href="https://github.com/kunalsahu20">Kunal Sahu</a>
