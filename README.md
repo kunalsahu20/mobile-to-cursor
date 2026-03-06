@@ -4,7 +4,7 @@
 
 **Turn your phone into a wireless trackpad & keyboard for your PC.**
 
-A lightweight, open-source remote input system that lets you control your Windows desktop from your Android phone over Wi-Fi. No cloud, no accounts, no bloatware — just a direct TCP connection on your local network.
+A lightweight, open-source remote input system that lets you control your Windows desktop from your Android phone over Wi-Fi. No cloud, no accounts, no bloatware. Just a direct TCP connection on your local network.
 
 ---
 
@@ -35,27 +35,27 @@ A lightweight, open-source remote input system that lets you control your Window
 - Media keys: Play/Pause, Next, Previous, Volume
 
 ### Security
-- **PIN authentication** — A random 6-digit PIN is generated each time the receiver starts. You must enter this PIN in the phone app to connect.
-- **Single device limit** — Only one phone can connect at a time.
-- **Local network only** — No internet, no cloud, no data leaves your Wi-Fi.
-- **Auto-reconnect** — Saves last IP/PIN and reconnects on app relaunch.
+- **PIN authentication**: A random 6-digit PIN is generated each time the receiver starts. You must enter this PIN in the phone app to connect.
+- **Single device limit**: Only one phone can connect at a time.
+- **Local network only**: No internet, no cloud, no data leaves your Wi-Fi.
+- **Auto-reconnect**: Saves last IP/PIN and reconnects on app relaunch.
 
 ---
 
 ## Quick Start
 
 ### Prerequisites
-- **Desktop:** Download `Vexra.exe` from [Releases](https://github.com/kunalsahu20/mobile-to-cursor/releases) — **or** Python 3.10+ with `pynput` installed
+- **Desktop:** Download `Vexra.exe` from [Releases](https://github.com/kunalsahu20/mobile-to-cursor/releases), **or** Python 3.10+ with `pynput` installed
 - **Phone:** Android 8.0+ device on the same Wi-Fi network
 
 ### 1. Start the Desktop Receiver
 
-**Option A — Standalone .exe (recommended):**
+**Option A - Standalone .exe (recommended):**
 Download `Vexra.exe` from the [latest release](https://github.com/kunalsahu20/mobile-to-cursor/releases) and double-click to run.
 
 > ⚠️ **Windows SmartScreen Warning:** Since Vexra is an open-source unsigned executable, Windows may show a "Windows protected your PC" warning. Click **"More info" → "Run anyway"** to proceed. The full source code is available on this repo for verification.
 
-**Option B — Run from source:**
+**Option B - Run from source:**
 ```bash
 cd desktop
 pip install -r requirements.txt
@@ -82,7 +82,7 @@ Switch between **Keyboard** and **Trackpad** modes using the bottom toggle. All 
 ```
 vexra/
 ├── desktop/                    # Python TCP receiver
-│   ├── receiver.py             # Main server — accepts connections, validates PIN
+│   ├── receiver.py             # Main server - accepts connections, validates PIN
 │   ├── protocol.py             # Event type definitions & JSON parsing
 │   ├── injector.py             # OS input injection via pynput
 │   ├── config.py               # Port, sensitivity settings
@@ -156,7 +156,7 @@ Contributions are welcome. Feel free to open issues or submit pull requests.
 
 ## License
 
-This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
 
 ---
 
