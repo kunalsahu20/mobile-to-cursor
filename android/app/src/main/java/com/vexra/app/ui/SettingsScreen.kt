@@ -107,7 +107,7 @@ fun SettingsScreen(
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    "© 2025 Vexra. All rights reserved.",
+                    "© 2026 Vexra. All rights reserved.",
                     color = VexraTextDim,
                     fontSize = 11.sp,
                 )
