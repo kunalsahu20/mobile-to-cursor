@@ -174,13 +174,13 @@
     /* Sticky Header */
     header.container {
       position: sticky;
-      top: 0;
+      top: 12px;
       z-index: 50;
-      max-width: 100%;
-      padding: 0;
-      background: rgba(0, 0, 0, 0.85);
+      background: rgba(0, 0, 0, 0.75);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
     }
 
     /* ── Nav ── */
@@ -188,22 +188,10 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 28px 24px;
-      border-bottom: 1px solid var(--border);
-      position: relative;
-      max-width: 1100px;
-      margin: 0 auto;
+      padding: 18px 0;
     }
 
-    .nav::after {
-      content: '';
-      position: absolute;
-      bottom: -1px;
-      left: 10%;
-      width: 80%;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(120, 80, 255, 0.3), rgba(80, 140, 255, 0.3), transparent);
-    }
+
 
     .nav__brand {
       font-size: 1.4rem;
@@ -803,7 +791,7 @@
       }
 
       .nav {
-        padding: 20px 20px;
+        padding: 14px 0;
       }
     }
 
@@ -1064,6 +1052,7 @@
 
     html.light header.container {
       background: rgba(245, 245, 247, 0.85);
+      border-color: rgba(0, 0, 0, 0.08);
     }
 
     .theme-toggle {
