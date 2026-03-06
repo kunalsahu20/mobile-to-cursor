@@ -238,44 +238,12 @@ private fun ConnectionScreen(
                 OutlinedTextField(
                     value = host,
                     onValueChange = { newValue ->
-                        // Allow digits + dots (dots = explicit octet separator)
+                        // Allow only digits and dots, let user type freely
                         val filtered = newValue.filter { it.isDigit() || it == '.' }
-                        // Smart auto-dot: insert dot when octet is full (3 digits)
-                        // or when the next digit would make the octet > 255.
-                        // User-typed dots explicitly seal the current octet.
-                        val octets = mutableListOf<String>()
-                        var current = StringBuilder()
-                        for (ch in filtered) {
-                            if (octets.size >= 4) break
-                            if (ch == '.') {
-                                // User explicitly ends this octet
-                                if (current.isNotEmpty()) {
-                                    octets.add(current.toString())
-                                    current = StringBuilder()
-                                }
-                            } else {
-                                val projected = (current.toString() + ch).toIntOrNull() ?: 0
-                                if (projected > 255) {
-                                    if (current.isNotEmpty()) octets.add(current.toString())
-                                    current = StringBuilder()
-                                    if (octets.size >= 4) break
-                                    current.append(ch)
-                                } else if (current.length == 3) {
-                                    octets.add(current.toString())
-                                    current = StringBuilder()
-                                    if (octets.size >= 4) break
-                                    current.append(ch)
-                                } else {
-                                    current.append(ch)
-                                }
-                            }
+                        // Basic validation: no consecutive dots, max 15 chars (xxx.xxx.xxx.xxx)
+                        if (filtered.length <= 15 && !filtered.contains("..")) {
+                            host = filtered
                         }
-                        if (current.isNotEmpty() && octets.size < 4) {
-                            octets.add(current.toString())
-                        }
-                        // Preserve trailing dot so "10." doesn't snap back to "10"
-                        val trailingDot = filtered.endsWith('.') && current.isEmpty() && octets.size in 1..3
-                        host = octets.joinToString(".") + if (trailingDot) "." else ""
                     },
                     placeholder = { Text("192.168.1.100", color = VexraTextDim) },
                     singleLine = true, modifier = Modifier.fillMaxWidth(),
