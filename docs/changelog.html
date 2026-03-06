@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Changelog — Vexra</title>
+    <meta name="description"
+        content="Vexra changelog and release notes. See what's new in each version of the wireless trackpad and keyboard app." />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <link rel="icon" type="image/png" sizes="192x192" href="favicon.png" />
+    <link rel="apple-touch-icon" href="favicon.png" />
+    <link rel="canonical" href="https://vexra.happie.in/changelog.html" />
+    <link rel="alternate" hreflang="en" href="https://vexra.happie.in/changelog.html" />
+    <link rel="alternate" hreflang="x-default" href="https://vexra.happie.in/changelog.html" />
+    <meta name="robots" content="index, follow" />
+    <meta name="keywords"
+        content="Vexra changelog, Vexra updates, Vexra release notes, wireless trackpad updates, Vexra version history" />
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Changelog — Vexra" />
+    <meta property="og:description" content="See what's new in each version of Vexra." />
+    <meta property="og:url" content="https://vexra.happie.in/changelog.html" />
+    <meta property="og:site_name" content="Vexra" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet" />
+    <style>
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #000;
+            --fg: #fff;
+            --muted: #888;
+            --border: rgba(255, 255, 255, 0.12);
+            --accent: rgba(120, 80, 255, 0.9);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--fg);
+            line-height: 1.7;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            opacity: 0.03;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            pointer-events: none;
+        }
+
+        .glow-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .glow-orb--top-right {
+            width: 700px;
+            height: 700px;
+            top: -250px;
+            right: -250px;
+            background: radial-gradient(circle, rgba(120, 80, 255, 0.12) 0%, rgba(60, 120, 255, 0.05) 40%, transparent 70%);
+            animation: pulse 8s ease-in-out infinite alternate;
+        }
+
+        .glow-orb--bottom-left {
+            width: 600px;
+            height: 600px;
+            bottom: -200px;
+            left: -200px;
+            background: radial-gradient(circle, rgba(80, 140, 255, 0.1) 0%, rgba(140, 80, 255, 0.04) 40%, transparent 70%);
+            animation: pulse 10s ease-in-out 2s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 0.6;
+                transform: scale(1);
+            }
+
+            100% {
+                opacity: 1;
+                transform: scale(1.15);
+            }
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ── Nav ── */
+        .nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 28px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 10%;
+            width: 80%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(120, 80, 255, 0.3), rgba(80, 140, 255, 0.3), transparent);
+        }
+
+        .nav__brand {
+            font-size: 1.4rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            text-decoration: none;
+            color: var(--fg);
+        }
+
+        .nav__right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .nav__links {
+            display: flex;
+            gap: 24px;
+            list-style: none;
+        }
+
+        .nav__links a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav__links a:hover {
+            color: var(--fg);
+        }
+
+        /* ── Changelog Content ── */
+        .changelog {
+            padding: 40px 0 60px;
+        }
+
+        .changelog__badge {
+            display: inline-block;
+            padding: 5px 14px;
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--muted);
+            margin-bottom: 24px;
+            letter-spacing: 0.5px;
+            margin-top: 24px;
+        }
+
+        .changelog__title {
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 800;
+            letter-spacing: -1.5px;
+            margin-bottom: 8px;
+        }
+
+        .changelog__subtitle {
+            color: var(--muted);
+            font-size: 0.95rem;
+            margin-bottom: 48px;
+        }
+
+        /* ── Release Entry ── */
+        .release {
+            border-left: 2px solid var(--border);
+            padding-left: 28px;
+            margin-bottom: 48px;
+            position: relative;
+        }
+
+        .release::before {
+            content: '';
+            position: absolute;
+            left: -6px;
+            top: 8px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 12px rgba(120, 80, 255, 0.4);
+        }
+
+        .release--latest::before {
+            width: 12px;
+            height: 12px;
+            left: -7px;
+            box-shadow: 0 0 20px rgba(120, 80, 255, 0.6);
+        }
+
+        .release__header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .release__version {
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .release__tag {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 100px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .release__tag--latest {
+            background: rgba(120, 80, 255, 0.15);
+            color: rgba(160, 130, 255, 1);
+            border: 1px solid rgba(120, 80, 255, 0.3);
+        }
+
+        .release__date {
+            color: var(--muted);
+            font-size: 0.85rem;
+            margin-bottom: 16px;
+        }
+
+        .release__changes {
+            list-style: none;
+        }
+
+        .release__changes li {
+            padding: 6px 0;
+            font-size: 0.92rem;
+            color: rgba(255, 255, 255, 0.85);
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .release__changes li::before {
+            content: '';
+            display: inline-block;
+            min-width: 6px;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+            margin-top: 9px;
+        }
+
+        .release__link {
+            display: inline-block;
+            margin-top: 12px;
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: opacity 0.2s;
+        }
+
+        .release__link:hover {
+            opacity: 0.7;
+        }
+
+        /* ── Footer ── */
+        .footer {
+            padding: 40px 0;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .footer__text {
+            color: var(--muted);
+            font-size: 0.85rem;
+        }
+
+        .footer__text a {
+            color: var(--fg);
+            text-decoration: none;
+        }
+
+        .footer__links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .footer__links a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color 0.2s;
+        }
+
+        .footer__links a:hover {
+            color: var(--fg);
+        }
+
+        /* ── Theme Toggle ── */
+        .theme-toggle {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 999;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--fg);
+            backdrop-filter: blur(10px);
+            transition: background 0.2s;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.14);
+        }
+
+        .nav__theme-toggle {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--fg);
+            transition: background 0.2s;
+        }
+
+        .nav__theme-toggle svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .nav__theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.14);
+        }
+
+        /* ── Hamburger ── */
+        .nav__hamburger {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--fg);
+            padding: 4px;
+        }
+
+        .nav__hamburger svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        /* ── Mobile ── */
+        @media (max-width: 768px) {
+            .theme-toggle {
+                display: none;
+            }
+
+            .nav__hamburger {
+                display: flex;
+            }
+
+            .nav__links {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: var(--bg);
+                flex-direction: column;
+                padding: 24px;
+                border-bottom: 1px solid var(--border);
+                gap: 16px;
+                z-index: 100;
+            }
+
+            .nav__links.open {
+                display: flex;
+            }
+
+            .release__header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+            }
+
+            .footer {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .footer__links {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+    </style>
+    <script src="theme.js"></script>
+</head>
+
+<body>
+    <div class="glow-orb glow-orb--top-right"></div>
+    <div class="glow-orb glow-orb--bottom-left"></div>
+
+    <!-- Theme Toggle -->
+    <button onclick="toggleTheme()" class="theme-toggle" title="Toggle Theme">
+        <svg id="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+        </svg>
+        <svg id="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+        </svg>
+    </button>
+
+    <header class="container">
+        <nav class="nav">
+            <a href="index.html" class="nav__brand">Vexra</a>
+            <div class="nav__right">
+                <button class="nav__theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+                    <svg id="nav-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5" />
+                        <line x1="12" y1="1" x2="12" y2="3" />
+                        <line x1="12" y1="21" x2="12" y2="23" />
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                        <line x1="1" y1="12" x2="3" y2="12" />
+                        <line x1="21" y1="12" x2="23" y2="12" />
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                    </svg>
+                    <svg id="nav-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                    </svg>
+                </button>
+
+                <button class="nav__hamburger" onclick="toggleNav()" aria-label="Toggle navigation menu">
+                    <svg id="hamburger-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="6" x2="21" y2="6" />
+                        <line x1="3" y1="12" x2="21" y2="12" />
+                        <line x1="3" y1="18" x2="21" y2="18" />
+                    </svg>
+                    <svg id="close-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+            <ul class="nav__links" id="navLinks">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="documentation.html">Docs</a></li>
+                <li><a href="changelog.html" style="color:var(--fg);">Changelog</a></li>
+                <li><a href="terms-and-conditions.html">Terms & Conditions</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container changelog">
+        <span class="changelog__badge">Release Notes</span>
+        <h1 class="changelog__title">Changelog</h1>
+        <p class="changelog__subtitle">What's new in each version of Vexra.</p>
+
+        <!-- v1.0.8 -->
+        <article class="release release--latest">
+            <div class="release__header">
+                <span class="release__version">v1.0.8</span>
+                <span class="release__tag release__tag--latest">Latest</span>
+            </div>
+            <time class="release__date">March 6, 2026</time>
+            <ul class="release__changes">
+                <li>Fixed IP address input — removed aggressive auto-dot insertion</li>
+                <li>Users can now manually type dots in the IP address field</li>
+                <li>Basic validation prevents consecutive dots and limits input length</li>
+                <li>Merged Privacy Policy and Terms of Service into a single Terms & Conditions page</li>
+                <li>Fixed duplicate theme.js script in documentation page</li>
+                <li>Improved mobile spacing and padding across all pages</li>
+            </ul>
+            <a href="https://github.com/kunalsahu20/mobile-to-cursor/releases/tag/v1.0.8" target="_blank"
+                class="release__link">View on GitHub</a>
+        </article>
+
+        <!-- v1.0.7 -->
+        <article class="release">
+            <div class="release__header">
+                <span class="release__version">v1.0.7</span>
+            </div>
+            <time class="release__date">March 2026</time>
+            <ul class="release__changes">
+                <li>Added dark/light theme toggle across all pages</li>
+                <li>New documentation page with full setup guide</li>
+                <li>Added Terms of Service and Privacy Policy pages</li>
+                <li>Website redesign with glassmorphism UI</li>
+                <li>Added Discord community link</li>
+            </ul>
+            <a href="https://github.com/kunalsahu20/mobile-to-cursor/releases/tag/v1.0.7" target="_blank"
+                class="release__link">View on GitHub</a>
+        </article>
+
+        <!-- v1.0.6 -->
+        <article class="release">
+            <div class="release__header">
+                <span class="release__version">v1.0.6</span>
+            </div>
+            <time class="release__date">February 2026</time>
+            <ul class="release__changes">
+                <li>PIN authentication for secure connections</li>
+                <li>Auto-reconnect on app relaunch</li>
+                <li>GitHub-based update checker</li>
+                <li>Settings screen with version display</li>
+            </ul>
+        </article>
+
+        <!-- v1.0.0 -->
+        <article class="release">
+            <div class="release__header">
+                <span class="release__version">v1.0.0</span>
+            </div>
+            <time class="release__date">January 2026</time>
+            <ul class="release__changes">
+                <li>Initial release</li>
+                <li>Multi-touch trackpad with 1-4 finger gestures</li>
+                <li>Full keyboard input with modifiers and shortcuts</li>
+                <li>TCP-based local network connection</li>
+                <li>Windows desktop receiver (Python + PyInstaller)</li>
+            </ul>
+        </article>
+    </main>
+
+    <footer class="container">
+        <div class="footer">
+            <p class="footer__text">Made with love by <a href="https://github.com/kunalsahu20" target="_blank">Kunal
+                    Sahu</a></p>
+            <div class="footer__links">
+                <a href="index.html">Home</a>
+                <a href="documentation.html">Docs</a>
+                <a href="changelog.html">Changelog</a>
+                <a href="terms-and-conditions.html">Terms & Conditions</a>
+                <a href="https://github.com/kunalsahu20/mobile-to-cursor" target="_blank">GitHub</a>
+                <a href="https://discord.gg/TVFkDKVxR6" target="_blank" style="color:rgba(120,80,255,0.9);">Discord</a>
+            </div>
+        </div>
+    </footer>
+    <script>
+        function toggleNav() {
+            var links = document.getElementById('navLinks');
+            var hamburger = document.getElementById('hamburger-icon');
+            var close = document.getElementById('close-icon');
+            var isOpen = links.classList.contains('open');
+            if (isOpen) {
+                closeNav();
+            } else {
+                links.classList.add('open');
+                hamburger.style.display = 'none';
+                close.style.display = 'block';
+            }
+        }
+        function closeNav() {
+            var links = document.getElementById('navLinks');
+            var hamburger = document.getElementById('hamburger-icon');
+            var close = document.getElementById('close-icon');
+            links.classList.remove('open');
+            hamburger.style.display = 'block';
+            close.style.display = 'none';
+        }
+    </script>
+</body>
+
+</html>
