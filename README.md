@@ -1,5 +1,7 @@
 # Vexra
 
+🌐 **Website:** [vexra.happie.in](https://vexra.happie.in) · 📱 **Download:** [Latest Release](https://github.com/kunalsahu20/mobile-to-cursor/releases/latest) · 📖 **Docs:** [Documentation](https://vexra.happie.in/documentation.html)
+
 **Turn your phone into a wireless trackpad & keyboard for your PC.**
 
 A lightweight, open-source remote input system that lets you control your Windows desktop from your Android phone over Wi-Fi. No cloud, no accounts, no bloatware — just a direct TCP connection on your local network.
@@ -108,9 +110,13 @@ vexra/
 │       └── viewmodel/
 │           └── MainViewModel.kt# State management & event dispatch
 │
-├── landing-page/               # Vexra website
-│   ├── index.html              # Dark mode landing page
-│   └── white.html              # Light mode landing page
+├── docs/                       # Vexra website (vexra.happie.in)
+│   ├── index.html              # Landing page
+│   ├── documentation.html      # Full documentation
+│   ├── terms-and-conditions.html # Terms & Conditions
+│   ├── sitemap.xml             # SEO sitemap
+│   ├── robots.txt              # Crawler rules
+│   └── theme.js                # Dark/light mode toggle
 │
 ├── .gitignore
 ├── LICENSE
@@ -155,5 +161,8 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 ---
 
 <p align="center">
-  Made by <a href="https://github.com/kunalsahu20">Kunal Sahu</a>
+  <a href="https://vexra.happie.in">🌐 Website</a> · <a href="https://vexra.happie.in/documentation.html">📖 Docs</a> · <a href="https://github.com/kunalsahu20/mobile-to-cursor/releases/latest">📱 Download</a> · <a href="https://discord.gg/TVFkDKVxR6">💬 Discord</a>
+</p>
+<p align="center">
+  Made with ❤️ by <a href="https://github.com/kunalsahu20">Kunal Sahu</a>
 </p>
