@@ -139,10 +139,10 @@
             color: var(--fg);
         }
 
-        .nav__right {
+        .nav__actions {
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 8px;
         }
 
         .nav__links {
@@ -332,94 +332,112 @@
             color: var(--fg);
         }
 
-        /* ── Theme Toggle ── */
-        .theme-toggle {
-            position: fixed;
-            top: 24px;
-            right: 24px;
-            z-index: 999;
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid var(--border);
-            border-radius: 50%;
-            width: 42px;
-            height: 42px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            color: var(--fg);
-            backdrop-filter: blur(10px);
-            transition: background 0.2s;
-        }
-
-        .theme-toggle:hover {
-            background: rgba(255, 255, 255, 0.14);
-        }
-
-        .nav__theme-toggle {
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid var(--border);
-            border-radius: 50%;
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            color: var(--fg);
-            transition: background 0.2s;
-        }
-
-        .nav__theme-toggle svg {
-            width: 18px;
-            height: 18px;
-        }
-
-        .nav__theme-toggle:hover {
-            background: rgba(255, 255, 255, 0.14);
-        }
-
-        /* ── Hamburger ── */
+        /* ── Hamburger Menu ── */
         .nav__hamburger {
             display: none;
             background: none;
             border: none;
             cursor: pointer;
+            padding: 6px;
             color: var(--fg);
-            padding: 4px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .nav__hamburger:hover {
+            background: rgba(255, 255, 255, 0.08);
         }
 
         .nav__hamburger svg {
-            width: 24px;
-            height: 24px;
+            width: 22px;
+            height: 22px;
+            display: block;
         }
 
-        /* ── Mobile ── */
+        /* Theme toggle inline (for mobile nav) — hidden on desktop */
+        .nav__theme-toggle {
+            display: none;
+        }
+
+        /* ── Responsive ── */
         @media (max-width: 768px) {
-            .theme-toggle {
-                display: none;
+            .container {
+                padding: 0 24px;
             }
 
+            /* Show hamburger + inline theme toggle */
             .nav__hamburger {
                 display: flex;
             }
 
+            .nav__theme-toggle {
+                display: flex;
+                background: none;
+                border: 1px solid var(--border);
+                cursor: pointer;
+                padding: 6px;
+                color: var(--fg);
+                border-radius: 8px;
+                width: 36px;
+                height: 36px;
+                align-items: center;
+                justify-content: center;
+                transition: background 0.2s;
+            }
+
+            .nav__theme-toggle:hover {
+                background: rgba(255, 255, 255, 0.08);
+            }
+
+            .nav__theme-toggle svg {
+                width: 18px;
+                height: 18px;
+                display: block;
+            }
+
+            /* Hide the fixed-position floating theme toggle on mobile */
+            .theme-toggle {
+                display: none !important;
+            }
+
+            /* Dropdown nav behind hamburger */
+            .nav {
+                flex-wrap: wrap;
+            }
+
             .nav__links {
                 display: none;
-                position: absolute;
-                top: 100%;
-                left: 0;
-                right: 0;
-                background: var(--bg);
+                width: 100%;
                 flex-direction: column;
-                padding: 24px;
-                border-bottom: 1px solid var(--border);
-                gap: 16px;
-                z-index: 100;
+                gap: 0;
+                padding: 12px 0 4px;
+                order: 3;
             }
 
             .nav__links.open {
                 display: flex;
+            }
+
+            .nav__links li {
+                list-style: none;
+            }
+
+            .nav__links a {
+                display: block;
+                padding: 12px 0;
+                font-size: 0.95rem;
+                color: var(--muted);
+                border-top: 1px solid var(--border);
+                transition: color 0.2s;
+            }
+
+            .nav__links a:hover {
+                color: var(--fg);
+            }
+
+            .changelog__title {
+                font-size: clamp(1.6rem, 6vw, 2.2rem);
+                letter-spacing: -1px;
             }
 
             .release__header {
@@ -431,12 +449,106 @@
             .footer {
                 flex-direction: column;
                 text-align: center;
+                gap: 16px;
+                padding-bottom: 40px;
             }
 
             .footer__links {
                 flex-wrap: wrap;
                 justify-content: center;
+                gap: 12px 20px;
             }
+        }
+
+        @media (max-width: 400px) {
+            .container {
+                padding: 0 20px;
+            }
+
+            .nav {
+                padding: 20px 0;
+            }
+        }
+
+        /* ── Light Theme ── */
+        html.light body {
+            background: #f5f5f7;
+            color: #0a0a0a;
+        }
+
+        html.light {
+            --fg: #0a0a0a;
+            --bg: #f5f5f7;
+            --muted: #555;
+            --border: rgba(0, 0, 0, 0.07);
+            --accent: #6c3ce0;
+        }
+
+        html.light body::before {
+            opacity: 0.025;
+        }
+
+        html.light .glow-orb--top-right {
+            background: radial-gradient(circle, rgba(108, 60, 224, 0.3) 0%, rgba(139, 92, 246, 0.15) 30%, transparent 70%);
+            filter: blur(120px);
+        }
+
+        html.light .glow-orb--bottom-left {
+            background: radial-gradient(circle, rgba(236, 72, 153, 0.2) 0%, rgba(139, 92, 246, 0.12) 30%, transparent 70%);
+        }
+
+        html.light .nav::after {
+            background: linear-gradient(90deg, transparent, rgba(108, 60, 224, 0.5), rgba(236, 72, 153, 0.4), transparent);
+        }
+
+        html.light .release__changes li {
+            color: #444;
+        }
+
+        html.light .release__tag--latest {
+            background: rgba(108, 60, 224, 0.1);
+            color: #6c3ce0;
+            border-color: rgba(108, 60, 224, 0.25);
+        }
+
+        html.light .changelog__badge {
+            background: rgba(255, 255, 255, 0.6);
+        }
+
+        html.light .footer__links a:hover {
+            color: #6c3ce0;
+        }
+
+        /* ── Desktop floating theme toggle (bottom-right) ── */
+        .theme-toggle {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            z-index: 100;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            color: var(--fg);
+            outline: none;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 30px rgba(120, 80, 255, 0.15);
+        }
+
+        html.light .theme-toggle {
+            background: rgba(255, 255, 255, 0.65);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         }
     </style>
     <script src="theme.js"></script>
@@ -446,7 +558,7 @@
     <div class="glow-orb glow-orb--top-right"></div>
     <div class="glow-orb glow-orb--bottom-left"></div>
 
-    <!-- Theme Toggle -->
+    <!-- Desktop floating theme toggle (bottom-right) -->
     <button onclick="toggleTheme()" class="theme-toggle" title="Toggle Theme">
         <svg id="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round">
@@ -469,8 +581,8 @@
     <header class="container">
         <nav class="nav">
             <a href="index.html" class="nav__brand">Vexra</a>
-            <div class="nav__right">
-                <button class="nav__theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+            <div class="nav__actions">
+                <button class="nav__theme-toggle" onclick="toggleTheme()" aria-label="Toggle Theme">
                     <svg id="nav-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="5" />
