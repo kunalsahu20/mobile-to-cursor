@@ -127,12 +127,27 @@
             z-index: 1;
         }
 
+        /* Sticky Header */
+        header.container {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            max-width: 100%;
+            padding: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
         .nav {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 28px 0;
+            padding: 28px 24px;
             border-bottom: 1px solid var(--border);
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
         }
 
         .nav::after {
@@ -684,6 +699,10 @@
             color: #6c3ce0;
         }
 
+        html.light header.container {
+            background: rgba(245, 245, 247, 0.85);
+        }
+
         .theme-toggle {
             position: fixed;
             bottom: 28px;
@@ -743,7 +762,7 @@
         </svg>
     </button>
 
-    <header class="container" style="position:relative;">
+    <header class="container">
         <nav class="nav">
             <a href="index.html" class="nav__brand">Vexra</a>
             <div class="nav__actions">
