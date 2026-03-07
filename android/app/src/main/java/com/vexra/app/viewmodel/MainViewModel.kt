@@ -164,6 +164,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /**
+     * Move the laptop cursor by [delta] positions.
+     * Positive = right, negative = left. Sends individual arrow key events.
+     */
+    fun sendCursorMove(delta: Int) {
+        if (delta == 0) return
+        viewModelScope.launch {
+            val key = if (delta > 0) "right" else "left"
+            repeat(kotlin.math.abs(delta)) {
+                tcpClient.send(EventProtocol.keyPress(key))
+            }
+        }
+    }
+
     /** Send a special key (Enter, Tab, Backspace on desktop, arrows, etc). */
     fun onSpecialKey(key: String) {
         viewModelScope.launch {

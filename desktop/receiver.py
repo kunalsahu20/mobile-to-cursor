@@ -113,7 +113,7 @@ async def handle_client(reader, writer) -> None:
     logger.info("Device connected: %s", peer)
     _log_queue.put(("status", "connecting"))
 
-    # ── Rate limit check ──
+    # ── Rate limit check (outside lock — reject fast without blocking) ──
     is_locked, remaining = _check_rate_limit(peer_ip)
     if is_locked:
         logger.warning("Rejected %s -- locked out (%ds left)", peer_ip, remaining)
@@ -139,6 +139,15 @@ async def handle_client(reader, writer) -> None:
         return
 
     async with _connection_lock:
+        # ── Re-check rate limit inside lock (catches queued connections) ──
+        is_locked, remaining = _check_rate_limit(peer_ip)
+        if is_locked:
+            logger.warning("Rejected %s -- locked out (%ds left)", peer_ip, remaining)
+            msg = f'{{"status":"AUTH_FAIL","reason":"rate_limited","retry_after":{remaining}}}\n'
+            writer.write(msg.encode())
+            await writer.drain()
+            return
+
         authenticated = False
         try:
             try:

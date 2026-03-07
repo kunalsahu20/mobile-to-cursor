@@ -50,6 +50,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -312,17 +313,19 @@ fun VexraModeToggle(
 
 
 /**
- * Real-time text input — sends each keystroke to the desktop as you type.
+ * Real-time text input with cursor sync.
  *
- * Design: "transient keystroke proxy" — the phone field captures keystrokes
- * and forwards them immediately. A zero-width space sentinel ensures backspace
- * always has something to delete, even when the field appears empty.
+ * When the user types, characters are forwarded immediately.
+ * When the user moves the cursor on the phone (tapping in the middle
+ * of text), arrow key events are sent to move the laptop cursor to
+ * the same position. This keeps phone and laptop cursors in sync.
  *
- * - Characters appended → sent as KEY_INPUT immediately
- * - Characters deleted → sent as backspace events immediately
- * - Complex edits (paste, middle-of-text) → prefix/suffix diff analysis
- * - Auto-clears after 1.5s of inactivity to prevent desync
- * - Uses `remember` (not `rememberSaveable`) — live input shouldn't survive config changes
+ * - Typing → KEY_INPUT events sent immediately
+ * - Backspace → backspace key events sent immediately
+ * - Cursor movement → left/right arrow keys sent to match position
+ * - Complex edits (paste, autocorrect) → prefix/suffix diff with cursor-aware positioning
+ * - Uses `TextFieldValue` (not String) to track cursor position
+ * - No auto-clear — text stays until user clears it
  *
  * Send button remains as a fallback for pasting bulk text.
  */
@@ -331,22 +334,9 @@ fun VexraTextInput(
     onKeyStroke: (String) -> Unit,
     onBackspace: () -> Unit,
     onSend: (String) -> Unit,
+    onCursorMove: (Int) -> Unit,
 ) {
-    // Zero-width space sentinel — always kept in field so backspace is detectable
-    val sentinel = "\u200B"
-    var text by remember { mutableStateOf(sentinel) }
-    var lastText by remember { mutableStateOf(sentinel) }
-    var isSuppressed by remember { mutableStateOf(false) }
-
-    // Auto-clear after 1.5s of inactivity to prevent phone/laptop text divergence
-    LaunchedEffect(text) {
-        if (text != sentinel) {
-            kotlinx.coroutines.delay(1500L)
-            isSuppressed = true
-            text = sentinel
-            lastText = sentinel
-        }
-    }
+    var value by remember { mutableStateOf(TextFieldValue("")) }
 
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
@@ -354,75 +344,49 @@ fun VexraTextInput(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         BasicTextField(
-            value = text,
-            onValueChange = { newText ->
-                if (isSuppressed) {
-                    isSuppressed = false
-                    lastText = newText
-                    return@BasicTextField
+            value = value,
+            onValueChange = { newValue ->
+                val oldText = value.text
+                val newText = newValue.text
+                val oldCursor = value.selection.start
+                val newCursor = newValue.selection.start
+
+                if (newText == oldText) {
+                    // ── Pure cursor movement (no text change) ──
+                    val delta = newCursor - oldCursor
+                    if (delta != 0) onCursorMove(delta)
+                } else {
+                    // ── Text changed — compute minimal diff ──
+                    val prefixLen = newText.commonPrefixWith(oldText).length
+                    val maxSuffix = minOf(newText.length, oldText.length) - prefixLen
+                    var suffixLen = 0
+                    while (suffixLen < maxSuffix &&
+                        oldText[oldText.length - 1 - suffixLen] ==
+                        newText[newText.length - 1 - suffixLen]
+                    ) {
+                        suffixLen++
+                    }
+
+                    val deleteEnd = oldText.length - suffixLen
+                    val deletedCount = deleteEnd - prefixLen
+                    val insertEnd = newText.length - suffixLen
+                    val inserted = if (insertEnd > prefixLen) {
+                        newText.substring(prefixLen, insertEnd)
+                    } else ""
+
+                    // Move laptop cursor to where the edit starts (deleteEnd).
+                    // We backspace FROM deleteEnd, so cursor must be there first.
+                    val cursorToEditPos = deleteEnd - oldCursor
+                    if (cursorToEditPos != 0) onCursorMove(cursorToEditPos)
+
+                    // Delete the removed characters
+                    repeat(deletedCount) { onBackspace() }
+
+                    // Insert the new characters
+                    if (inserted.isNotEmpty()) onKeyStroke(inserted)
                 }
 
-                val oldText = lastText
-
-                when {
-                    // Sentinel deleted (backspace on "empty" field)
-                    oldText == sentinel && newText.isEmpty() -> {
-                        onBackspace()
-                        // Restore sentinel quietly
-                        isSuppressed = true
-                        text = sentinel
-                        lastText = sentinel
-                        return@BasicTextField
-                    }
-                    // Characters appended at end (most common: normal typing)
-                    newText.length > oldText.length && newText.startsWith(oldText) -> {
-                        val added = newText.substring(oldText.length)
-                        onKeyStroke(added)
-                    }
-                    // Characters deleted from end (backspace)
-                    newText.length < oldText.length && oldText.startsWith(newText) -> {
-                        val count = oldText.length - newText.length
-                        repeat(count) { onBackspace() }
-                        // If field would be empty, keep the sentinel
-                        if (newText.isEmpty() || newText == sentinel.substring(0, 0)) {
-                            isSuppressed = true
-                            text = sentinel
-                            lastText = sentinel
-                            return@BasicTextField
-                        }
-                    }
-                    // Complex edit (paste, middle insertion, autocorrect, etc.)
-                    newText != oldText -> {
-                        // Strip sentinel from both for clean comparison
-                        val cleanOld = oldText.replace(sentinel, "")
-                        val cleanNew = newText.replace(sentinel, "")
-                        if (cleanNew.isNotEmpty() && cleanNew != cleanOld) {
-                            // Find longest common prefix and suffix to compute minimal diff
-                            val prefixLen = cleanNew.commonPrefixWith(cleanOld).length
-                            val suffixLen = cleanNew.reversed()
-                                .commonPrefixWith(cleanOld.reversed()).length
-                                .coerceAtMost(cleanOld.length - prefixLen)
-
-                            val deletedCount = cleanOld.length - prefixLen - suffixLen
-                            val insertEnd = (cleanNew.length - suffixLen)
-                                .coerceAtLeast(prefixLen)
-                            val inserted = cleanNew.substring(prefixLen, insertEnd)
-
-                            repeat(deletedCount) { onBackspace() }
-                            if (inserted.isNotEmpty()) onKeyStroke(inserted)
-                        }
-                    }
-                }
-
-                lastText = newText
-                text = newText
-
-                // Safety auto-clear if text gets too long
-                if (text.length > 100) {
-                    isSuppressed = true
-                    text = sentinel
-                    lastText = sentinel
-                }
+                value = newValue
             },
             textStyle = TextStyle(color = VexraTextPrimary, fontSize = 16.sp),
             cursorBrush = SolidColor(VexraAccent),
@@ -431,7 +395,7 @@ fun VexraTextInput(
                 .background(VexraCard, RoundedCornerShape(24.dp))
                 .padding(horizontal = 20.dp, vertical = 14.dp),
             decorationBox = { innerTextField ->
-                if (text == sentinel || text.isEmpty()) {
+                if (value.text.isEmpty()) {
                     Text("Type here (live)", color = VexraTextDim, fontSize = 16.sp)
                 }
                 innerTextField()
@@ -439,12 +403,9 @@ fun VexraTextInput(
         )
         FilledIconButton(
             onClick = {
-                val cleanText = text.replace(sentinel, "")
-                if (cleanText.isNotEmpty()) {
-                    onSend(cleanText)
-                    isSuppressed = true
-                    text = sentinel
-                    lastText = sentinel
+                if (value.text.isNotEmpty()) {
+                    onSend(value.text)
+                    value = TextFieldValue("")
                 }
             },
             modifier = Modifier.size(48.dp),

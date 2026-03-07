@@ -33,6 +33,7 @@ class MainActivity : ComponentActivity() {
                     onSendText = viewModel::sendText,
                     onKeyStroke = viewModel::sendKeyStroke,
                     onBackspace = viewModel::sendBackspace,
+                    onCursorMove = viewModel::sendCursorMove,
                     onSpecialKey = viewModel::onSpecialKey,
                     onToggleModifier = viewModel::toggleModifier,
                     onToggleMode = viewModel::toggleMode,

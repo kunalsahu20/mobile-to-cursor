@@ -92,6 +92,7 @@ fun MainScreen(
     onSendText: (text: String) -> Unit,
     onKeyStroke: (text: String) -> Unit,
     onBackspace: () -> Unit,
+    onCursorMove: (delta: Int) -> Unit,
     onSpecialKey: (key: String) -> Unit,
     onToggleModifier: (key: String) -> Unit,
     onToggleMode: () -> Unit,
@@ -159,6 +160,7 @@ fun MainScreen(
                     onSendText = onSendText,
                     onKeyStroke = onKeyStroke,
                     onBackspace = onBackspace,
+                    onCursorMove = onCursorMove,
                     onSpecialKey = onSpecialKey,
                     onToggleModifier = onToggleModifier,
                     onToggleMode = onToggleMode,
@@ -370,6 +372,7 @@ private fun ControlScreen(
     onSendText: (String) -> Unit,
     onKeyStroke: (String) -> Unit,
     onBackspace: () -> Unit,
+    onCursorMove: (Int) -> Unit,
     onSpecialKey: (String) -> Unit,
     onToggleModifier: (String) -> Unit,
     onToggleMode: () -> Unit,
@@ -479,6 +482,7 @@ private fun ControlScreen(
                         onKeyStroke = onKeyStroke,
                         onBackspace = onBackspace,
                         onSend = onSendText,
+                        onCursorMove = onCursorMove,
                     )
                 }
             }
