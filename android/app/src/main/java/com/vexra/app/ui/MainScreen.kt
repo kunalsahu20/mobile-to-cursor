@@ -88,6 +88,8 @@ fun MainScreen(
     uiState: MainViewModel.UiState,
     updateState: UpdateChecker.UpdateUiState,
     onSendText: (text: String) -> Unit,
+    onKeyStroke: (text: String) -> Unit,
+    onBackspace: () -> Unit,
     onSpecialKey: (key: String) -> Unit,
     onToggleModifier: (key: String) -> Unit,
     onToggleMode: () -> Unit,
@@ -152,6 +154,8 @@ fun MainScreen(
                 Screen.CONTROL -> ControlScreen(
                     uiState = uiState,
                     onSendText = onSendText,
+                    onKeyStroke = onKeyStroke,
+                    onBackspace = onBackspace,
                     onSpecialKey = onSpecialKey,
                     onToggleModifier = onToggleModifier,
                     onToggleMode = onToggleMode,
@@ -330,6 +334,8 @@ private fun ConnectionScreen(
 private fun ControlScreen(
     uiState: MainViewModel.UiState,
     onSendText: (String) -> Unit,
+    onKeyStroke: (String) -> Unit,
+    onBackspace: () -> Unit,
     onSpecialKey: (String) -> Unit,
     onToggleModifier: (String) -> Unit,
     onToggleMode: () -> Unit,
@@ -435,7 +441,11 @@ private fun ControlScreen(
                     )
                 }
                 MainViewModel.InputMode.KEYBOARD -> {
-                    VexraTextInput(onSend = onSendText)
+                    VexraTextInput(
+                        onKeyStroke = onKeyStroke,
+                        onBackspace = onBackspace,
+                        onSend = onSendText,
+                    )
                 }
             }
 

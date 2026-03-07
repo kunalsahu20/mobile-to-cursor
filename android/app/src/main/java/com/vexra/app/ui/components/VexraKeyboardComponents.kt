@@ -311,10 +311,26 @@ fun VexraModeToggle(
 }
 
 
-/** Compose-then-send text input with glass field and purple send button. */
+/**
+ * Real-time text input — sends each keystroke to the desktop as you type.
+ *
+ * Uses diff-based detection on onValueChange:
+ * - Characters appended → sent as KEY_INPUT immediately
+ * - Characters deleted → sent as backspace events immediately
+ * - Complex edits (paste, cut) → sends entire new text
+ * - Auto-clears at 200 chars to prevent accumulation
+ *
+ * Send button remains as a fallback for pasting bulk text.
+ */
 @Composable
-fun VexraTextInput(onSend: (String) -> Unit) {
+fun VexraTextInput(
+    onKeyStroke: (String) -> Unit,
+    onBackspace: () -> Unit,
+    onSend: (String) -> Unit,
+) {
     var text by rememberSaveable { mutableStateOf("") }
+    var lastText by remember { mutableStateOf("") }
+    var isSuppressed by remember { mutableStateOf(false) }
 
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
@@ -322,7 +338,43 @@ fun VexraTextInput(onSend: (String) -> Unit) {
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         BasicTextField(
-            value = text, onValueChange = { text = it },
+            value = text,
+            onValueChange = { newText ->
+                if (isSuppressed) {
+                    isSuppressed = false
+                    lastText = newText
+                    return@BasicTextField
+                }
+
+                val oldText = lastText
+
+                when {
+                    // Characters appended at end
+                    newText.length > oldText.length && newText.startsWith(oldText) -> {
+                        val added = newText.substring(oldText.length)
+                        onKeyStroke(added)
+                    }
+                    // Characters deleted from end
+                    newText.length < oldText.length && oldText.startsWith(newText) -> {
+                        val count = oldText.length - newText.length
+                        repeat(count) { onBackspace() }
+                    }
+                    // Complex edit (paste, middle edit, etc.)
+                    newText != oldText && newText.isNotEmpty() -> {
+                        onKeyStroke(newText)
+                    }
+                }
+
+                lastText = newText
+                text = newText
+
+                // Auto-clear to prevent accumulation
+                if (text.length > 200) {
+                    isSuppressed = true
+                    text = ""
+                    lastText = ""
+                }
+            },
             textStyle = TextStyle(color = VexraTextPrimary, fontSize = 16.sp),
             cursorBrush = SolidColor(VexraAccent),
             modifier = Modifier
@@ -331,13 +383,20 @@ fun VexraTextInput(onSend: (String) -> Unit) {
                 .padding(horizontal = 20.dp, vertical = 14.dp),
             decorationBox = { innerTextField ->
                 if (text.isEmpty()) {
-                    Text("Type here, then tap Send →", color = VexraTextDim, fontSize = 16.sp)
+                    Text("Type here (live)", color = VexraTextDim, fontSize = 16.sp)
                 }
                 innerTextField()
             },
         )
         FilledIconButton(
-            onClick = { onSend(text); text = "" },
+            onClick = {
+                if (text.isNotEmpty()) {
+                    onSend(text)
+                    isSuppressed = true
+                    text = ""
+                    lastText = ""
+                }
+            },
             modifier = Modifier.size(48.dp),
             shape = CircleShape,
             colors = IconButtonDefaults.filledIconButtonColors(containerColor = VexraAccent),

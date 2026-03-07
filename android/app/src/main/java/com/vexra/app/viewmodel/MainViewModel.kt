@@ -119,9 +119,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     // ── Keyboard: compose-then-send ─────────────
 
     /**
-     * Send composed text to the desktop.
-     * Called when the user taps the Send button.
-     * The text is sent as-is — no diff, no backspace forwarding.
+     * Send composed text to the desktop (fallback for paste).
+     * Called when the user taps the Send button for bulk text.
      */
     fun sendText(text: String) {
         if (text.isBlank()) return
@@ -133,6 +132,24 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         history.add(0, text)
         if (history.size > 20) history.removeAt(history.size - 1)
         _uiState.value = _uiState.value.copy(sentHistory = history)
+    }
+
+    /**
+     * Send a single keystroke (or small fragment) in real-time.
+     * Called on every onValueChange diff. No history tracking to avoid spam.
+     */
+    fun sendKeyStroke(text: String) {
+        if (text.isEmpty()) return
+        viewModelScope.launch {
+            tcpClient.send(EventProtocol.keyInput(text))
+        }
+    }
+
+    /** Send a backspace key press for real-time deletion. */
+    fun sendBackspace() {
+        viewModelScope.launch {
+            tcpClient.send(EventProtocol.keyPress("backspace"))
+        }
     }
 
     /** Send a special key (Enter, Tab, Backspace on desktop, arrows, etc). */

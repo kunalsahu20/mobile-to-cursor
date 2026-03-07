@@ -31,6 +31,8 @@ class MainActivity : ComponentActivity() {
                     uiState = uiState,
                     updateState = updateState,
                     onSendText = viewModel::sendText,
+                    onKeyStroke = viewModel::sendKeyStroke,
+                    onBackspace = viewModel::sendBackspace,
                     onSpecialKey = viewModel::onSpecialKey,
                     onToggleModifier = viewModel::toggleModifier,
                     onToggleMode = viewModel::toggleMode,

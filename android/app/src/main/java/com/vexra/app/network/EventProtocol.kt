@@ -1,10 +1,13 @@
 package com.vexra.app.network
 
+import org.json.JSONObject
+
 /**
  * Event protocol — mirrors the desktop receiver's protocol.py.
  *
  * Wire format: newline-terminated JSON strings over a persistent TCP socket.
- * We use org.json (bundled with Android) to avoid extra dependencies.
+ * Uses org.json.JSONObject (bundled with Android) for safe JSON construction,
+ * handling unicode, control characters, and special escapes automatically.
  */
 object EventProtocol {
 
@@ -20,53 +23,60 @@ object EventProtocol {
 
     /** PIN authentication — must be the first message after connecting. */
     fun auth(pin: String): String =
-        """{"type":"$TYPE_AUTH","pin":"$pin"}""" + "\n"
+        JSONObject().apply {
+            put("type", TYPE_AUTH)
+            put("pin", pin)
+        }.toString() + "\n"
 
     /** Pinch-to-zoom. Positive delta = zoom in, negative = zoom out. */
     fun zoom(delta: Int): String =
-        """{"type":"$TYPE_ZOOM","delta":$delta}""" + "\n"
+        JSONObject().apply {
+            put("type", TYPE_ZOOM)
+            put("delta", delta)
+        }.toString() + "\n"
 
     /** Text insertion: types characters as-is on the laptop. */
     fun keyInput(text: String): String =
-        """{"type":"$TYPE_KEY_INPUT","text":${jsonEscape(text)}}""" + "\n"
+        JSONObject().apply {
+            put("type", TYPE_KEY_INPUT)
+            put("text", text)
+        }.toString() + "\n"
 
     /** Special key press/release (backspace, enter, arrows, etc). */
     fun keyPress(key: String, action: String = "tap"): String =
-        """{"type":"$TYPE_KEY_PRESS","key":"$key","action":"$action"}""" + "\n"
+        JSONObject().apply {
+            put("type", TYPE_KEY_PRESS)
+            put("key", key)
+            put("action", action)
+        }.toString() + "\n"
 
     /** Cursor movement by delta pixels. */
     fun mouseMove(dx: Int, dy: Int): String =
-        """{"type":"$TYPE_MOUSE_MOVE","dx":$dx,"dy":$dy}""" + "\n"
+        JSONObject().apply {
+            put("type", TYPE_MOUSE_MOVE)
+            put("dx", dx)
+            put("dy", dy)
+        }.toString() + "\n"
 
     /** Mouse button press/release/tap. */
     fun mouseClick(button: String = "left", action: String = "tap"): String =
-        """{"type":"$TYPE_MOUSE_CLICK","button":"$button","action":"$action"}""" + "\n"
+        JSONObject().apply {
+            put("type", TYPE_MOUSE_CLICK)
+            put("button", button)
+            put("action", action)
+        }.toString() + "\n"
 
     /** Scroll wheel — positive dy = scroll up. */
     fun mouseScroll(dx: Int = 0, dy: Int): String =
-        """{"type":"$TYPE_MOUSE_SCROLL","dx":$dx,"dy":$dy}""" + "\n"
+        JSONObject().apply {
+            put("type", TYPE_MOUSE_SCROLL)
+            put("dx", dx)
+            put("dy", dy)
+        }.toString() + "\n"
 
     /** Keep-alive heartbeat. */
     fun heartbeat(): String =
-        """{"type":"$TYPE_HEARTBEAT"}""" + "\n"
-
-    /**
-     * Minimal JSON string escaping — handles quotes, backslash, and newlines.
-     * We avoid pulling in Gson/Moshi just for this.
-     */
-    private fun jsonEscape(value: String): String {
-        val sb = StringBuilder("\"")
-        for (ch in value) {
-            when (ch) {
-                '"' -> sb.append("\\\"")
-                '\\' -> sb.append("\\\\")
-                '\n' -> sb.append("\\n")
-                '\r' -> sb.append("\\r")
-                '\t' -> sb.append("\\t")
-                else -> sb.append(ch)
-            }
-        }
-        sb.append("\"")
-        return sb.toString()
-    }
+        JSONObject().apply {
+            put("type", TYPE_HEARTBEAT)
+        }.toString() + "\n"
 }

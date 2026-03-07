@@ -13,6 +13,7 @@ import secrets
 import socket
 import sys
 import threading
+import time
 import tkinter as tk
 from datetime import datetime
 
@@ -50,6 +51,45 @@ logger = logging.getLogger(__name__)
 AUTH_PIN = f"{secrets.randbelow(1_000_000):06d}"
 _connection_lock = asyncio.Lock()
 
+# ── Rate limiting: track failed auth per IP ──
+# Format: {ip_str: (fail_count, lockout_until_timestamp)}
+_failed_attempts: dict[str, tuple[int, float]] = {}
+_RATE_LIMIT_THRESHOLD = 3     # failures before lockout kicks in
+_RATE_LIMIT_BASE_SECS = 30    # first lockout duration
+_RATE_LIMIT_MAX_SECS = 600    # cap at 10 minutes
+
+
+def _check_rate_limit(ip: str) -> tuple[bool, int]:
+    """Check if an IP is currently locked out.
+    Returns (is_locked, seconds_remaining)."""
+    if ip not in _failed_attempts:
+        return False, 0
+    count, lockout_until = _failed_attempts[ip]
+    if count < _RATE_LIMIT_THRESHOLD:
+        return False, 0
+    remaining = lockout_until - time.monotonic()
+    if remaining > 0:
+        return True, int(remaining)
+    return False, 0
+
+
+def _record_failure(ip: str) -> int:
+    """Record a failed auth attempt. Returns the lockout duration (0 if none)."""
+    count = _failed_attempts.get(ip, (0, 0.0))[0] + 1
+    if count >= _RATE_LIMIT_THRESHOLD:
+        exponent = count - _RATE_LIMIT_THRESHOLD
+        lockout_secs = min(_RATE_LIMIT_BASE_SECS * (2 ** exponent),
+                           _RATE_LIMIT_MAX_SECS)
+        _failed_attempts[ip] = (count, time.monotonic() + lockout_secs)
+        return lockout_secs
+    _failed_attempts[ip] = (count, 0.0)
+    return 0
+
+
+def _clear_failures(ip: str) -> None:
+    """Clear failed attempts for an IP after successful auth."""
+    _failed_attempts.pop(ip, None)
+
 
 def get_local_ips() -> list[str]:
     ips = []
@@ -69,11 +109,26 @@ def get_local_ips() -> list[str]:
 
 async def handle_client(reader, writer) -> None:
     peer = writer.get_extra_info("peername")
+    peer_ip = peer[0] if peer else "unknown"
     logger.info("Device connected: %s", peer)
     _log_queue.put(("status", "connecting"))
 
+    # ── Rate limit check ──
+    is_locked, remaining = _check_rate_limit(peer_ip)
+    if is_locked:
+        logger.warning("Rejected %s -- locked out (%ds left)", peer_ip, remaining)
+        msg = f'{{"status":"AUTH_FAIL","reason":"rate_limited","retry_after":{remaining}}}\n'
+        writer.write(msg.encode())
+        await writer.drain()
+        writer.close()
+        try:
+            await writer.wait_closed()
+        except Exception:
+            pass
+        return
+
     if _connection_lock.locked():
-        logger.warning("Rejected %s — busy", peer)
+        logger.warning("Rejected %s -- busy", peer)
         writer.write(b'{"status":"AUTH_FAIL","reason":"busy"}\n')
         await writer.drain()
         writer.close()
@@ -102,11 +157,21 @@ async def handle_client(reader, writer) -> None:
                 await writer.drain()
                 return
             if event.get("pin") != AUTH_PIN:
-                logger.warning("Wrong PIN from %s", peer)
-                writer.write(b'{"status":"AUTH_FAIL","reason":"wrong_pin"}\n')
+                lockout = _record_failure(peer_ip)
+                if lockout > 0:
+                    logger.warning("Wrong PIN from %s -- locked out for %ds",
+                                   peer, lockout)
+                    msg = (f'{{"status":"AUTH_FAIL","reason":"wrong_pin"'
+                           f',"retry_after":{lockout}}}\n')
+                    writer.write(msg.encode())
+                else:
+                    logger.warning("Wrong PIN from %s", peer)
+                    writer.write(b'{"status":"AUTH_FAIL","reason":"wrong_pin"}\n')
                 await writer.drain()
                 return
 
+            # Auth passed -- clear any previous failures for this IP
+            _clear_failures(peer_ip)
             authenticated = True
             writer.write(b'{"status":"AUTH_OK"}\n')
             await writer.drain()
