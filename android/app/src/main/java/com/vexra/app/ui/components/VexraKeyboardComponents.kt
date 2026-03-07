@@ -314,11 +314,15 @@ fun VexraModeToggle(
 /**
  * Real-time text input — sends each keystroke to the desktop as you type.
  *
- * Uses diff-based detection on onValueChange:
+ * Design: "transient keystroke proxy" — the phone field captures keystrokes
+ * and forwards them immediately. A zero-width space sentinel ensures backspace
+ * always has something to delete, even when the field appears empty.
+ *
  * - Characters appended → sent as KEY_INPUT immediately
  * - Characters deleted → sent as backspace events immediately
- * - Complex edits (paste, cut) → sends entire new text
- * - Auto-clears at 200 chars to prevent accumulation
+ * - Complex edits (paste, middle-of-text) → prefix/suffix diff analysis
+ * - Auto-clears after 1.5s of inactivity to prevent desync
+ * - Uses `remember` (not `rememberSaveable`) — live input shouldn't survive config changes
  *
  * Send button remains as a fallback for pasting bulk text.
  */
@@ -328,9 +332,21 @@ fun VexraTextInput(
     onBackspace: () -> Unit,
     onSend: (String) -> Unit,
 ) {
-    var text by rememberSaveable { mutableStateOf("") }
-    var lastText by remember { mutableStateOf("") }
+    // Zero-width space sentinel — always kept in field so backspace is detectable
+    val sentinel = "\u200B"
+    var text by remember { mutableStateOf(sentinel) }
+    var lastText by remember { mutableStateOf(sentinel) }
     var isSuppressed by remember { mutableStateOf(false) }
+
+    // Auto-clear after 1.5s of inactivity to prevent phone/laptop text divergence
+    LaunchedEffect(text) {
+        if (text != sentinel) {
+            kotlinx.coroutines.delay(1500L)
+            isSuppressed = true
+            text = sentinel
+            lastText = sentinel
+        }
+    }
 
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
@@ -349,30 +365,63 @@ fun VexraTextInput(
                 val oldText = lastText
 
                 when {
-                    // Characters appended at end
+                    // Sentinel deleted (backspace on "empty" field)
+                    oldText == sentinel && newText.isEmpty() -> {
+                        onBackspace()
+                        // Restore sentinel quietly
+                        isSuppressed = true
+                        text = sentinel
+                        lastText = sentinel
+                        return@BasicTextField
+                    }
+                    // Characters appended at end (most common: normal typing)
                     newText.length > oldText.length && newText.startsWith(oldText) -> {
                         val added = newText.substring(oldText.length)
                         onKeyStroke(added)
                     }
-                    // Characters deleted from end
+                    // Characters deleted from end (backspace)
                     newText.length < oldText.length && oldText.startsWith(newText) -> {
                         val count = oldText.length - newText.length
                         repeat(count) { onBackspace() }
+                        // If field would be empty, keep the sentinel
+                        if (newText.isEmpty() || newText == sentinel.substring(0, 0)) {
+                            isSuppressed = true
+                            text = sentinel
+                            lastText = sentinel
+                            return@BasicTextField
+                        }
                     }
-                    // Complex edit (paste, middle edit, etc.)
-                    newText != oldText && newText.isNotEmpty() -> {
-                        onKeyStroke(newText)
+                    // Complex edit (paste, middle insertion, autocorrect, etc.)
+                    newText != oldText -> {
+                        // Strip sentinel from both for clean comparison
+                        val cleanOld = oldText.replace(sentinel, "")
+                        val cleanNew = newText.replace(sentinel, "")
+                        if (cleanNew.isNotEmpty() && cleanNew != cleanOld) {
+                            // Find longest common prefix and suffix to compute minimal diff
+                            val prefixLen = cleanNew.commonPrefixWith(cleanOld).length
+                            val suffixLen = cleanNew.reversed()
+                                .commonPrefixWith(cleanOld.reversed()).length
+                                .coerceAtMost(cleanOld.length - prefixLen)
+
+                            val deletedCount = cleanOld.length - prefixLen - suffixLen
+                            val insertEnd = (cleanNew.length - suffixLen)
+                                .coerceAtLeast(prefixLen)
+                            val inserted = cleanNew.substring(prefixLen, insertEnd)
+
+                            repeat(deletedCount) { onBackspace() }
+                            if (inserted.isNotEmpty()) onKeyStroke(inserted)
+                        }
                     }
                 }
 
                 lastText = newText
                 text = newText
 
-                // Auto-clear to prevent accumulation
-                if (text.length > 200) {
+                // Safety auto-clear if text gets too long
+                if (text.length > 100) {
                     isSuppressed = true
-                    text = ""
-                    lastText = ""
+                    text = sentinel
+                    lastText = sentinel
                 }
             },
             textStyle = TextStyle(color = VexraTextPrimary, fontSize = 16.sp),
@@ -382,7 +431,7 @@ fun VexraTextInput(
                 .background(VexraCard, RoundedCornerShape(24.dp))
                 .padding(horizontal = 20.dp, vertical = 14.dp),
             decorationBox = { innerTextField ->
-                if (text.isEmpty()) {
+                if (text == sentinel || text.isEmpty()) {
                     Text("Type here (live)", color = VexraTextDim, fontSize = 16.sp)
                 }
                 innerTextField()
@@ -390,11 +439,12 @@ fun VexraTextInput(
         )
         FilledIconButton(
             onClick = {
-                if (text.isNotEmpty()) {
-                    onSend(text)
+                val cleanText = text.replace(sentinel, "")
+                if (cleanText.isNotEmpty()) {
+                    onSend(cleanText)
                     isSuppressed = true
-                    text = ""
-                    lastText = ""
+                    text = sentinel
+                    lastText = sentinel
                 }
             },
             modifier = Modifier.size(48.dp),

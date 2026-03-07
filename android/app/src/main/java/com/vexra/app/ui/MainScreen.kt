@@ -40,8 +40,10 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -145,6 +147,7 @@ fun MainScreen(
         ) { screen ->
             when (screen) {
                 Screen.CONNECTION -> ConnectionScreen(
+                    uiState = uiState,
                     connectionState = uiState.connectionState,
                     initialHost = uiState.hostIp,
                     initialPort = uiState.port,
@@ -192,6 +195,7 @@ fun MainScreen(
 
 @Composable
 private fun ConnectionScreen(
+    uiState: MainViewModel.UiState,
     connectionState: TcpClient.ConnectionState,
     initialHost: String, initialPort: Int, initialPin: String,
     onConnect: (String, Int, String) -> Unit,
@@ -213,7 +217,23 @@ private fun ConnectionScreen(
     )
 
     val isAuthFailed = connectionState == TcpClient.ConnectionState.AUTH_FAILED
+    val isRateLimited = connectionState == TcpClient.ConnectionState.RATE_LIMITED
+    val isAuthError = isAuthFailed || isRateLimited
     val isConnecting = connectionState == TcpClient.ConnectionState.CONNECTING
+
+    // Live countdown timer for rate-limited state
+    var countdown by remember { mutableStateOf(0) }
+    LaunchedEffect(isRateLimited, uiState.retryAfterSecs) {
+        if (isRateLimited && uiState.retryAfterSecs > 0) {
+            countdown = uiState.retryAfterSecs
+            while (countdown > 0) {
+                kotlinx.coroutines.delay(1000L)
+                countdown--
+            }
+        } else {
+            countdown = 0
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -280,7 +300,7 @@ private fun ConnectionScreen(
                     },
                     placeholder = { Text("Enter 6-digit PIN", color = VexraTextDim) },
                     singleLine = true, modifier = Modifier.fillMaxWidth(),
-                    colors = if (isAuthFailed) OutlinedTextFieldDefaults.colors(
+                    colors = if (isAuthError) OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = VexraRed, unfocusedBorderColor = VexraRed,
                         focusedLabelColor = VexraRed, unfocusedLabelColor = VexraRed,
                         cursorColor = VexraRed,
@@ -291,9 +311,23 @@ private fun ConnectionScreen(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
                     leadingIcon = { Icon(Icons.Default.Lock, null, tint = VexraTextDim, modifier = Modifier.size(20.dp)) },
                 )
-                if (isAuthFailed) {
+                if (isAuthError) {
                     Spacer(Modifier.height(8.dp))
-                    Text("Wrong PIN — check PIN on your desktop", color = VexraRed, fontSize = 12.sp)
+                    if (isRateLimited && countdown > 0) {
+                        Text(
+                            "Too many wrong PINs -- try again in ${countdown}s",
+                            color = VexraRed,
+                            fontSize = 12.sp,
+                        )
+                    } else if (isRateLimited) {
+                        Text(
+                            "Too many wrong PINs -- locked out, wait and retry",
+                            color = VexraRed,
+                            fontSize = 12.sp,
+                        )
+                    } else {
+                        Text("Wrong PIN -- check PIN on your desktop", color = VexraRed, fontSize = 12.sp)
+                    }
                 }
             }
         }
@@ -305,7 +339,7 @@ private fun ConnectionScreen(
             modifier = Modifier.fillMaxWidth().height(56.dp),
             colors = ButtonDefaults.buttonColors(containerColor = VexraAccent),
             shape = RoundedCornerShape(28.dp),
-            enabled = !isConnecting,
+            enabled = !isConnecting && countdown <= 0,
         ) {
             Icon(Icons.Default.Wifi, null, modifier = Modifier.size(22.dp))
             Spacer(Modifier.width(10.dp))

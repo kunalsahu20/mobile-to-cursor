@@ -637,11 +637,29 @@
         <h1 class="changelog__title">Changelog</h1>
         <p class="changelog__subtitle">What's new in each version of Vexra.</p>
 
-        <!-- v1.1.0 -->
+        <!-- v1.1.1 -->
         <article class="release release--latest">
             <div class="release__header">
-                <span class="release__version">v1.1.0</span>
+                <span class="release__version">v1.1.1</span>
                 <span class="release__tag release__tag--latest">Latest</span>
+            </div>
+            <time class="release__date">March 7, 2026</time>
+            <ul class="release__changes">
+                <li>Fixed text doubling bug after typing long messages</li>
+                <li>Backspace now works even when phone input field is empty</li>
+                <li>Rate limiter now shows live countdown timer on wrong PIN attempts</li>
+                <li>Connect button disabled during rate-limit cooldown</li>
+                <li>Auto-clears input field after 1.5s of inactivity to prevent desync</li>
+                <li>Complex edits (paste, autocorrect) use smart prefix/suffix diff</li>
+            </ul>
+            <a href="https://github.com/kunalsahu20/mobile-to-cursor/releases/tag/v1.1.1" target="_blank"
+                class="release__link">View on GitHub</a>
+        </article>
+
+        <!-- v1.1.0 -->
+        <article class="release">
+            <div class="release__header">
+                <span class="release__version">v1.1.0</span>
             </div>
             <time class="release__date">March 7, 2026</time>
             <ul class="release__changes">

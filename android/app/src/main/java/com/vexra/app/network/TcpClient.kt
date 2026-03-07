@@ -15,6 +15,7 @@ import java.io.BufferedOutputStream
 import java.io.IOException
 import java.net.InetSocketAddress
 import java.net.Socket
+import org.json.JSONObject
 
 /**
  * Persistent TCP client that connects to the desktop receiver.
@@ -36,7 +37,7 @@ class TcpClient(private val scope: CoroutineScope) {
         private const val RECONNECT_MAX_DELAY_MS = 10000L
     }
 
-    enum class ConnectionState { DISCONNECTED, CONNECTING, CONNECTED, AUTH_FAILED }
+    enum class ConnectionState { DISCONNECTED, CONNECTING, CONNECTED, AUTH_FAILED, RATE_LIMITED }
 
     private val _state = MutableStateFlow(ConnectionState.DISCONNECTED)
     val state: StateFlow<ConnectionState> = _state.asStateFlow()
@@ -50,6 +51,14 @@ class TcpClient(private val scope: CoroutineScope) {
     private var targetPort: Int = 5050
     private var authPin: String = ""
     private var shouldReconnect = false
+
+    /** Reason for auth failure (e.g., "wrong_pin", "rate_limited", "busy") */
+    private val _authFailReason = MutableStateFlow("")
+    val authFailReason: StateFlow<String> = _authFailReason.asStateFlow()
+
+    /** Seconds until rate-limit lockout expires (0 = no lockout) */
+    private val _retryAfterSecs = MutableStateFlow(0)
+    val retryAfterSecs: StateFlow<Int> = _retryAfterSecs.asStateFlow()
 
     /**
      * Start connecting to the desktop receiver.
@@ -92,8 +101,23 @@ class TcpClient(private val scope: CoroutineScope) {
 
                     if (!response.contains("AUTH_OK")) {
                         Log.w(TAG, "Auth failed: $response")
-                        _state.value = ConnectionState.AUTH_FAILED
-                        shouldReconnect = false  // Don't retry with wrong PIN
+                        // Parse server response for reason and retry_after
+                        try {
+                            val json = JSONObject(response)
+                            val reason = json.optString("reason", "unknown")
+                            val retryAfter = json.optInt("retry_after", 0)
+                            _authFailReason.value = reason
+                            _retryAfterSecs.value = retryAfter
+                            _state.value = if (reason == "rate_limited" || retryAfter > 0) {
+                                ConnectionState.RATE_LIMITED
+                            } else {
+                                ConnectionState.AUTH_FAILED
+                            }
+                        } catch (e: Exception) {
+                            _authFailReason.value = "unknown"
+                            _state.value = ConnectionState.AUTH_FAILED
+                        }
+                        shouldReconnect = false
                         cleanup()
                         return@launch
                     }

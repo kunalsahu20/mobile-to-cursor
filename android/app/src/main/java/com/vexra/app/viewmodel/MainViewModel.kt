@@ -13,12 +13,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /**
- * Main ViewModel — owns the TcpClient and all UI state.
+ * Main ViewModel -- owns the TcpClient and all UI state.
  *
- * Keyboard mode uses "compose-then-send": the user types freely
- * on the phone, edits/corrects typos, then taps Send to push
- * the final text to the desktop. This avoids backspace being
- * forwarded accidentally.
+ * Keyboard mode uses real-time forwarding: each keystroke is
+ * sent immediately via diff-based detection. A Send button
+ * remains as fallback for pasting bulk text.
  *
  * Saves the last-used IP/port to SharedPreferences and auto-connects
  * on next app launch. Falls back to showing settings if connection fails.
@@ -36,6 +35,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val showSettings: Boolean = true,
         val sentHistory: List<String> = emptyList(),
         val activeModifiers: Set<String> = emptySet(),
+        val retryAfterSecs: Int = 0,
+        val authFailReason: String = "",
     )
 
     private val prefs = application.getSharedPreferences("mobile_to_cursor", Context.MODE_PRIVATE)
@@ -55,10 +56,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             tcpClient.state.collect { connState ->
                 _uiState.value = _uiState.value.copy(
                     connectionState = connState,
-                    // Auto-hide settings when connected, auto-show otherwise
                     showSettings = connState != TcpClient.ConnectionState.CONNECTED,
                 )
                 autoConnectAttempted = false
+            }
+        }
+
+        // Watch auth failure details (reason + retry_after)
+        viewModelScope.launch {
+            tcpClient.authFailReason.collect { reason ->
+                _uiState.value = _uiState.value.copy(authFailReason = reason)
+            }
+        }
+        viewModelScope.launch {
+            tcpClient.retryAfterSecs.collect { secs ->
+                _uiState.value = _uiState.value.copy(retryAfterSecs = secs)
             }
         }
 
