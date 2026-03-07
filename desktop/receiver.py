@@ -409,7 +409,7 @@ class VexraApp:
         foot = tk.Frame(r, bg=BG, padx=32, pady=10)
         foot.pack(fill="x")
 
-        tk.Label(foot, text="v1.0.0", font=("Segoe UI", 8),
+        tk.Label(foot, text="v1.1.4", font=("Segoe UI", 8),
                  fg=TEXT_DIM, bg=BG).pack(side="left")
 
         ql = tk.Label(foot, text="QUIT", font=("Segoe UI", 8, "bold"),
