@@ -134,6 +134,7 @@ class TcpClient(private val scope: CoroutineScope) {
                     }
 
                     // Auth passed!
+                    sock.soTimeout = 0  // Reset timeout — connection should stay open indefinitely
                     _state.value = ConnectionState.CONNECTED
                     retryDelay = RECONNECT_BASE_DELAY_MS
                     Log.i(TAG, "Connected & authenticated to $host:$port")
