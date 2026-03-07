@@ -83,23 +83,34 @@ class TcpClient(private val scope: CoroutineScope) {
 
                     socket = sock
                     outputStream = BufferedOutputStream(sock.getOutputStream())
+                    val input = sock.getInputStream()
 
                     // ── Send PIN auth immediately ──
                     val authMsg = EventProtocol.auth(authPin)
-                    outputStream!!.write(authMsg.toByteArray(Charsets.UTF_8))
-                    outputStream!!.flush()
+                    try {
+                        outputStream!!.write(authMsg.toByteArray(Charsets.UTF_8))
+                        outputStream!!.flush()
+                    } catch (e: IOException) {
+                        // Server may have already sent a rejection (rate_limited)
+                        // and closed the connection. Try to read the response anyway.
+                        Log.w(TAG, "Auth write failed, checking for early rejection: ${e.message}")
+                    }
 
                     // Read server response (AUTH_OK or AUTH_FAIL)
-                    val input = sock.getInputStream()
                     val responseBuilder = StringBuilder()
-                    while (true) {
-                        val b = input.read()
-                        if (b == -1 || b.toChar() == '\n') break
-                        responseBuilder.append(b.toChar())
+                    sock.soTimeout = 3000  // 3s timeout to read response
+                    try {
+                        while (true) {
+                            val b = input.read()
+                            if (b == -1 || b.toChar() == '\n') break
+                            responseBuilder.append(b.toChar())
+                        }
+                    } catch (e: IOException) {
+                        Log.w(TAG, "Response read error: ${e.message}")
                     }
                     val response = responseBuilder.toString().trim()
 
-                    if (!response.contains("AUTH_OK")) {
+                    if (response.isEmpty() || !response.contains("AUTH_OK")) {
                         Log.w(TAG, "Auth failed: $response")
                         // Parse server response for reason and retry_after
                         try {
@@ -136,7 +147,11 @@ class TcpClient(private val scope: CoroutineScope) {
                     Log.w(TAG, "Connection failed: ${e.message}")
                 } finally {
                     cleanup()
-                    if (_state.value != ConnectionState.AUTH_FAILED) {
+                    // Preserve RATE_LIMITED and AUTH_FAILED states — don't override
+                    val current = _state.value
+                    if (current != ConnectionState.AUTH_FAILED &&
+                        current != ConnectionState.RATE_LIMITED
+                    ) {
                         _state.value = ConnectionState.DISCONNECTED
                     }
                 }

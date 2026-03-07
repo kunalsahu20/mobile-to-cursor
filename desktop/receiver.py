@@ -117,6 +117,11 @@ async def handle_client(reader, writer) -> None:
     is_locked, remaining = _check_rate_limit(peer_ip)
     if is_locked:
         logger.warning("Rejected %s -- locked out (%ds left)", peer_ip, remaining)
+        # Read and discard the client's auth line first (protocol: client sends → server responds)
+        try:
+            await asyncio.wait_for(reader.readline(), timeout=5.0)
+        except Exception:
+            pass
         msg = f'{{"status":"AUTH_FAIL","reason":"rate_limited","retry_after":{remaining}}}\n'
         writer.write(msg.encode())
         await writer.drain()
@@ -143,6 +148,11 @@ async def handle_client(reader, writer) -> None:
         is_locked, remaining = _check_rate_limit(peer_ip)
         if is_locked:
             logger.warning("Rejected %s -- locked out (%ds left)", peer_ip, remaining)
+            # Read and discard client's auth line first
+            try:
+                await asyncio.wait_for(reader.readline(), timeout=5.0)
+            except Exception:
+                pass
             msg = f'{{"status":"AUTH_FAIL","reason":"rate_limited","retry_after":{remaining}}}\n'
             writer.write(msg.encode())
             await writer.drain()
