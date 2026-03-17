@@ -5,14 +5,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="google-site-verification" content="Wzu-NdZRHv0969vSQyd2MbdR3xMsfLT1enaLLseeKHU" />
-  <title>Vexra | Your Phone. Your Trackpad. No Wires.</title>
+  <title>Vexra App | Wireless Phone Trackpad and Keyboard for PC</title>
   <meta name="description"
-    content="Vexra turns your phone into a wireless trackpad and keyboard for your PC. No cloud, no accounts. Just a direct local connection." />
+    content="Vexra is a free Android app and Windows receiver that turns your phone into a wireless trackpad and keyboard for your PC over local Wi-Fi. Open source, zero cloud." />
   <!-- SEO -->
   <link rel="canonical" href="https://vexra.happie.in/" />
   <link rel="alternate" hreflang="en" href="https://vexra.happie.in/" />
   <link rel="alternate" hreflang="x-default" href="https://vexra.happie.in/" />
-  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
   <meta name="author" content="Kunal Sahu" />
   <meta name="theme-color" content="#000000" />
   <meta name="keywords"
@@ -23,21 +23,23 @@
   <link rel="apple-touch-icon" href="favicon.png" />
   <!-- Open Graph -->
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="Vexra | Your Phone. Your Trackpad. No Wires." />
+  <meta property="og:title" content="Vexra App | Wireless Phone Trackpad and Keyboard for PC" />
   <meta property="og:description"
-    content="Turn your Android phone into a wireless trackpad & keyboard. Open source, local network, zero cloud." />
+    content="Turn your Android phone into a wireless trackpad and keyboard for your Windows PC. Open source, local network only, zero cloud." />
   <meta property="og:image" content="https://vexra.happie.in/og-image.png" />
+  <meta property="og:image:alt" content="Vexra app for using your phone as a wireless trackpad and keyboard for PC" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:url" content="https://vexra.happie.in" />
+  <meta property="og:url" content="https://vexra.happie.in/" />
   <meta property="og:site_name" content="Vexra" />
   <meta property="og:locale" content="en_US" />
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Vexra | Your Phone. Your Trackpad. No Wires." />
+  <meta name="twitter:title" content="Vexra App | Wireless Phone Trackpad and Keyboard for PC" />
   <meta name="twitter:description"
-    content="Turn your Android phone into a wireless trackpad & keyboard. Open source, local network, zero cloud." />
+    content="Turn your Android phone into a wireless trackpad and keyboard for your Windows PC. Open source, local network only, zero cloud." />
   <meta name="twitter:image" content="https://vexra.happie.in/og-image.png" />
+  <meta name="twitter:image:alt" content="Vexra app for using your phone as a wireless trackpad and keyboard for PC" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
@@ -264,7 +266,7 @@
       font-size: clamp(1.1rem, 2vw, 1.35rem);
       color: var(--muted);
       font-weight: 400;
-      max-width: 500px;
+      max-width: 720px;
       margin: 0 auto 48px;
     }
 
@@ -273,6 +275,22 @@
       gap: 16px;
       justify-content: center;
       flex-wrap: wrap;
+    }
+
+    .hero__supporting {
+      max-width: 760px;
+      margin: 24px auto 0;
+      color: var(--muted);
+      font-size: 0.98rem;
+    }
+
+    .hero__supporting a {
+      color: var(--fg);
+      text-decoration: none;
+    }
+
+    .hero__supporting a:hover {
+      text-decoration: underline;
     }
 
     /* ── Buttons ── */
@@ -453,6 +471,64 @@
     .gesture-item__action {
       font-size: 0.85rem;
       color: var(--muted);
+    }
+
+    /* ── FAQ ── */
+    .faq {
+      padding: 80px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .faq__header {
+      max-width: 760px;
+      margin: 0 auto 40px;
+      text-align: center;
+    }
+
+    .faq__title {
+      font-size: clamp(2rem, 4vw, 2.8rem);
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin-bottom: 12px;
+    }
+
+    .faq__subtitle {
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .faq__grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .faq-card {
+      padding: 28px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(10px);
+    }
+
+    .faq-card__title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .faq-card__body {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .faq-card__body a {
+      color: var(--fg);
+      text-decoration: none;
+    }
+
+    .faq-card__body a:hover {
+      text-decoration: underline;
     }
 
     /* ── Download ── */
@@ -670,6 +746,10 @@
         margin-bottom: 64px;
       }
 
+      .hero__supporting {
+        font-size: 0.92rem;
+      }
+
       .btn {
         width: 100%;
         max-width: 280px;
@@ -740,6 +820,19 @@
 
       .download {
         padding: 80px 0 60px;
+      }
+
+      .faq {
+        padding: 60px 0;
+      }
+
+      .faq__grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      .faq-card {
+        padding: 22px 20px;
       }
 
       .download__title {
@@ -1093,99 +1186,73 @@
     /* Floating toggle hide is now consolidated inside the main mobile @media block above */
   </style>
   <script src="theme.js"></script>
-  <!-- JSON-LD: SoftwareApplication -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "Vexra",
-    "description": "Vexra turns your Android phone into a wireless trackpad and keyboard for your PC. Open source, local network only, zero cloud.",
-    "url": "https://vexra.happie.in",
-    "applicationCategory": "UtilitiesApplication",
-    "operatingSystem": "Android, Windows",
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "USD"
-    },
-    "author": {
-      "@type": "Person",
-      "name": "Kunal Sahu",
-      "url": "https://github.com/kunalsahu20"
-    },
-    "downloadUrl": "https://github.com/kunalsahu20/mobile-to-cursor/releases/latest",
-    "softwareVersion": "latest",
-    "license": "https://opensource.org/licenses/MIT",
-    "screenshot": "https://vexra.happie.in/og-image.png",
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": "5",
-      "ratingCount": "1",
-      "bestRating": "5"
-    }
-  }
-  </script>
-  <!-- JSON-LD: FAQPage -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": [
+    "@graph": [
       {
-        "@type": "Question",
-        "name": "What is Vexra?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Vexra is a free, open-source app that turns your Android phone into a wireless trackpad and keyboard for your Windows PC. It works over your local Wi-Fi network with zero cloud dependency."
+        "@type": "Organization",
+        "@id": "https://vexra.happie.in/#organization",
+        "name": "Vexra",
+        "alternateName": "Vexra App",
+        "url": "https://vexra.happie.in/",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://vexra.happie.in/favicon.png"
+        },
+        "founder": {
+          "@type": "Person",
+          "name": "Kunal Sahu",
+          "url": "https://github.com/kunalsahu20"
+        },
+        "sameAs": [
+          "https://github.com/kunalsahu20/mobile-to-cursor",
+          "https://github.com/kunalsahu20",
+          "https://discord.gg/TVFkDKVxR6"
+        ]
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://vexra.happie.in/#website",
+        "url": "https://vexra.happie.in/",
+        "name": "Vexra",
+        "alternateName": "Vexra App",
+        "description": "Vexra is a free Android app and Windows receiver that turns your phone into a wireless trackpad and keyboard for your PC over local Wi-Fi.",
+        "inLanguage": "en",
+        "publisher": {
+          "@id": "https://vexra.happie.in/#organization"
         }
       },
       {
-        "@type": "Question",
-        "name": "Is Vexra free?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Yes, Vexra is completely free and open source under the MIT License. No subscriptions, no ads, no hidden costs."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "How do I set up Vexra?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Download the APK on your Android phone and run Vexra.exe on your PC. Enter the IP address shown on the desktop receiver into the app, and tap Connect. Both devices must be on the same Wi-Fi network."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Does Vexra send data to the cloud?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "No. Vexra works entirely over your local Wi-Fi network. No data ever leaves your network. No cloud servers, no accounts, no tracking."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Why does antivirus flag Vexra.exe?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "This is a false positive caused by pynput (a legitimate Python library for keyboard/mouse control) and PyInstaller packaging. The full source code is open on GitHub for inspection."
-        }
+        "@type": "SoftwareApplication",
+        "@id": "https://vexra.happie.in/#app",
+        "name": "Vexra",
+        "alternateName": "Vexra App",
+        "url": "https://vexra.happie.in/",
+        "description": "Vexra lets you use your Android phone as a wireless trackpad and keyboard for your Windows PC over local Wi-Fi with no cloud dependency.",
+        "applicationCategory": "UtilitiesApplication",
+        "operatingSystem": "Android 8.0+, Windows 10/11",
+        "isAccessibleForFree": true,
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "author": {
+          "@id": "https://vexra.happie.in/#organization"
+        },
+        "downloadUrl": "https://github.com/kunalsahu20/mobile-to-cursor/releases/latest",
+        "license": "https://opensource.org/licenses/MIT",
+        "image": "https://vexra.happie.in/og-image.png",
+        "screenshot": "https://vexra.happie.in/og-image.png",
+        "featureList": [
+          "Use your Android phone as a wireless trackpad for a Windows PC",
+          "Type from your phone with a full keyboard and shortcut support",
+          "Control your PC over the same local Wi-Fi network with no cloud service",
+          "Protect sessions with an optional 6-digit PIN"
+        ]
       }
     ]
-  }
-  </script>
-  <!-- JSON-LD: WebSite (Sitelinks Search Box) -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    "name": "Vexra",
-    "url": "https://vexra.happie.in",
-    "description": "Vexra turns your phone into a wireless trackpad and keyboard for your PC.",
-    "publisher": {
-      "@type": "Person",
-      "name": "Kunal Sahu"
-    }
   }
   </script>
 </head>
@@ -1221,7 +1288,7 @@
   <!-- Nav -->
   <header class="container">
     <nav class="nav">
-      <a href="#" class="nav__brand">Vexra</a>
+      <a href="/" class="nav__brand">Vexra</a>
       <div class="nav__actions">
         <!-- Inline Theme Toggle (Mobile Only) -->
         <button onclick="toggleTheme()" class="nav__theme-toggle" aria-label="Toggle Theme">
@@ -1276,11 +1343,11 @@
         <path
           d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.21 11.39.6.11.79-.26.79-.58v-2.23c-3.34.73-4.03-1.42-4.03-1.42-.55-1.39-1.33-1.76-1.33-1.76-1.09-.74.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.49 1 .11-.78.42-1.3.76-1.6-2.67-.31-5.47-1.34-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23.96-.27 1.98-.4 3-.41 1.02.01 2.05.14 3.01.41 2.29-1.55 3.3-1.23 3.3-1.23.66 1.65.24 2.87.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.62-5.48 5.92.43.37.82 1.1.82 2.22v3.29c0 .32.19.69.8.58C20.57 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z" />
       </svg>
-      Loading...
+      Latest release
     </a>
     <span class="hero__badge">Open Source &middot; Local Network Only</span>
     <h1 class="hero__title">Vexra</h1>
-    <p class="hero__subtitle">Your phone. Your trackpad. No wires.</p>
+    <p class="hero__subtitle">Vexra is a free Android app and Windows receiver that lets you use your phone as a wireless trackpad and keyboard for your PC over local Wi-Fi.</p>
     <div class="hero__cta">
       <a href="#download" class="btn btn--primary">
         <svg class="btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -1299,6 +1366,7 @@
         View on GitHub
       </a>
     </div>
+    <p class="hero__supporting">Use Vexra as a remote mouse, wireless phone trackpad, and keyboard for Windows 10/11. Read the <a href="documentation.html">setup guide</a>, browse the <a href="changelog.html">latest release notes</a>, or review the <a href="terms-and-conditions.html">privacy and security details</a>.</p>
   </section>
 
 
@@ -1433,12 +1501,37 @@
     </div>
   </section>
 
+  <section id="faq" class="faq container">
+    <div class="faq__header">
+      <h2 class="faq__title">Frequently Asked Questions</h2>
+      <p class="faq__subtitle">Clear answers for people searching for the Vexra app, a phone-to-PC trackpad, or a wireless keyboard app for Windows.</p>
+    </div>
+    <div class="faq__grid">
+      <article class="faq-card">
+        <h3 class="faq-card__title">Which devices does Vexra support?</h3>
+        <p class="faq-card__body">Vexra currently supports Android 8.0 or later on mobile and Windows 10/11 on desktop. The phone app connects to the Vexra receiver running on your Windows PC.</p>
+      </article>
+      <article class="faq-card">
+        <h3 class="faq-card__title">Does Vexra work without internet?</h3>
+        <p class="faq-card__body">Yes. Vexra uses a direct local Wi-Fi connection between your phone and computer. No account, no cloud relay, and no external server are required once both devices are on the same network.</p>
+      </article>
+      <article class="faq-card">
+        <h3 class="faq-card__title">How do I download and set up Vexra?</h3>
+        <p class="faq-card__body">Download the Android APK and desktop receiver from the latest release, then follow the <a href="documentation.html">Vexra setup guide</a>. Installation usually takes less than a minute.</p>
+      </article>
+      <article class="faq-card">
+        <h3 class="faq-card__title">Is Vexra open source and safe to inspect?</h3>
+        <p class="faq-card__body">Yes. Vexra is MIT-licensed and the full source code is available on <a href="https://github.com/kunalsahu20/mobile-to-cursor" target="_blank">GitHub</a>. You can review the code, build it yourself, and read the <a href="terms-and-conditions.html">privacy and security details</a>.</p>
+      </article>
+    </div>
+  </section>
+
   <section id="download" class="download container">
     <h2 class="download__title">Ready to go wireless?</h2>
     <p class="download__subtitle">Download the Vexra receiver for your desktop and the app for your phone.</p>
     <div class="download__buttons">
       <a id="dl-apk" href="https://github.com/kunalsahu20/mobile-to-cursor/releases/latest" target="_blank"
-        class="btn btn--primary" style="display:none;">
+        class="btn btn--primary">
         <svg class="btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round">
           <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
@@ -1448,7 +1541,7 @@
       </a>
       <a id="dl-exe" href="https://github.com/kunalsahu20/mobile-to-cursor/releases/latest" target="_blank"
         class="btn btn--primary"
-        style="background:rgba(120,80,255,0.9);border-color:rgba(120,80,255,0.9);color:#fff;display:none;">
+        style="background:rgba(120,80,255,0.9);border-color:rgba(120,80,255,0.9);color:#fff;">
         <svg class="btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round">
           <rect x="2" y="3" width="20" height="14" rx="2" />
